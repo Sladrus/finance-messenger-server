@@ -149,6 +149,6 @@ bot.on('new_chat_members', async (msg) => {
   await registerConversationHandlers.addConversation(chat, chatId);
 });
 
-httpServer.listen(5050, () => {
-  log(`Server ready. Port: 5050`);
+httpServer.listen(5005, () => {
+  log(`Server ready. Port: 5005`);
 });
