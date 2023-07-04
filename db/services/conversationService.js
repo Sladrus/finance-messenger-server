@@ -37,8 +37,10 @@ class ConversationService {
   }
 
   async findMessagesByChat(conversationId) {
+    console.log(conversationId);
+    if (!conversationId.chat_id) return;
     const conversation = await ConversationModel.findOne({
-      chat_id: Number(conversationId.chat_id),
+      chat_id: conversationId.chat_id,
     }).populate('messages');
     if (!conversation) {
       return console.log('Конверсация не найдена');

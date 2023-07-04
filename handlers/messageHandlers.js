@@ -33,7 +33,7 @@ module.exports = (io, socket) => {
   };
 
   const addMessage = async (message, chatId) => {
-    // console.log(message);
+    console.log(message);
     const msg = message?.isBot
       ? await bot.sendMessage(message.selectedConversation, message.text)
       : message;
@@ -51,8 +51,9 @@ module.exports = (io, socket) => {
         });
     }
     if (message?.isBot) {
+      msg.from.id = message.user._id;
+      msg.from.first_name = message.user.username;
       msg.unread = false;
-      // Loop through each message in the conversation and set unread to false
       await readConversation(msg.chat.id);
     }
 
