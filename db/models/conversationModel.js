@@ -13,6 +13,7 @@ var conversationSchema = new Schema({
     type: Number,
     required: true,
   },
+  user: { type: Schema.Types.ObjectId, ref: 'user' },
   messages: [{ type: Schema.Types.ObjectId, ref: 'message' }],
   stage: { type: Schema.Types.ObjectId, ref: 'stage' },
   createdAt: {
@@ -22,6 +23,9 @@ var conversationSchema = new Schema({
   updatedAt: {
     type: Date,
     required: true,
+  },
+  type: {
+    type: String,
   },
 });
 

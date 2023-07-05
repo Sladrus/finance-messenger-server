@@ -17,9 +17,7 @@ class StageService {
   async findStages() {
     const stages = await StageModel.find().populate({
       path: 'conversations',
-      populate: {
-        path: 'messages',
-      },
+      populate: [{ path: 'messages' }, { path: 'user' }],
     });
     // console.log(stages.conversations);
     return stages;

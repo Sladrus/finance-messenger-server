@@ -8,12 +8,22 @@ class ConversationService {
     return conversation;
   }
 
+  async updateConversation(id, body) {
+    console.log(body);
+    const conversation = await ConversationModel.updateOne(
+      { _id: id },
+      { $set: { ...body } }
+    );
+    return conversation;
+  }
+
   async findAllConversations() {
     const conversations = await ConversationModel.find()
       .populate({
         path: 'messages',
       })
-      .populate({ path: 'stage' });
+      .populate({ path: 'stage' })
+      .populate({ path: 'user' });
 
     conversations.forEach(async (conversation) => {
       conversation.unreadCount = conversation.messages.reduce(

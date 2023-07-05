@@ -13,14 +13,15 @@ const registerBoardHandlers = require('./handlers/boardHandlers');
 const registerNotificationHandlers = require('./handlers/notificationHandlers');
 
 const { bot } = require('./telegram');
-const conversations = require('./db/conversations');
 const {
   createConversation,
   findOneConversation,
+  updateConversation,
 } = require('./db/services/conversationService');
 const {
   addConversationToStage,
   findStageBy,
+  changeStage,
 } = require('./db/services/stageService');
 const { UserModel } = require('./db/models/userModel');
 const { TokenModel } = require('./db/models/tokenModel');
@@ -47,11 +48,11 @@ io.use(
       succeedWithoutToken: true,
     },
     async function (payload, done) {
-      log(payload);
+      // log(payload);
 
       if (payload && payload?._doc?.email) {
         const user = await UserModel.findOne({ email: payload._doc.email });
-        console.log(user);
+        console.log(user, 'USER');
         if (!user) {
           return done(null, false, 'user does not exist');
         }
@@ -77,7 +78,6 @@ mongoose
 
 // данная функция выполняется при подключении каждого сокета (обычно, один клиент = один сокет)
 const onConnection = (socket) => {
-  console.log(socket.request.user);
   socket.emit('checkAuth', socket.request.user);
   // получаем название комнаты из строки запроса "рукопожатия"
   const { roomId } = socket.handshake.auth;
@@ -159,23 +159,6 @@ bot.on('photo', async (msg) => {
 bot.on('text', async (msg) => {
   const chatId = msg.chat.id;
   msg.type = 'text';
-  const conversation = await findOneConversation({ chat_id: chatId });
-  if (!conversation) {
-    const stage = await findStageBy('free');
-    const data = await createConversation({
-      title: msg.chat.title,
-      chat_id: msg.chat.id,
-      unreadCount: 0,
-      stage: stage._id,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    });
-    console.log(stage);
-    stage.conversations.push(data._id);
-    await stage.save();
-    // await addConversationToStage(data._id, 'ready');
-    await registerBoardHandlers.getStatuses();
-  }
 
   // console.log(conversation);
   await registerMessageHandlers.addMessage(msg, chatId);
@@ -184,24 +167,82 @@ bot.on('text', async (msg) => {
 
 bot.on('migrate_to_chat_id', async (msg) => {
   const chatId = msg.chat.id; // ID чата, откуда пришло сообщение
-  const conversationIndex = conversations.findIndex(
-    (o) => o.chat_id === chatId
-  );
-  if (conversationIndex == -1) return;
-  console.log(conversations[conversationIndex]);
-  conversations[conversationIndex].chat_id = msg.migrate_to_chat_id;
-  conversations[conversationIndex].type = 'supergroup';
+  const conversation = await findOneConversation({ chat_id: chatId });
+  if (!conversation) return;
+  await updateConversation(conversation._id, {
+    chat_id: msg.migrate_to_chat_id,
+    type: 'supergroup',
+  });
+  // conversations[conversationIndex].chat_id = msg.migrate_to_chat_id;
+  // conversations[conversationIndex].type = 'supergroup';
   await registerConversationHandlers.getConversations();
+  return await registerBoardHandlers.getStatuses();
 });
 
 bot.on('new_chat_members', async (msg) => {
   const chatId = msg.chat.id;
   const me = await bot.getMe();
-  if (me.id != msg.new_chat_member.id) return;
-  const chat = msg.chat;
-  chat.messages = [];
-  chat.status = 'free';
-  await registerConversationHandlers.addConversation(chat, chatId);
+  if (me.id != msg.new_chat_member.id) {
+    const conversation = await findOneConversation({ chat_id: chatId });
+    // const stage = await findStageBy('free');
+    await changeStage(conversation._id, 'free');
+    await registerConversationHandlers.getConversations();
+    return await registerBoardHandlers.getStatuses();
+  }
+  const conversation = await findOneConversation({ chat_id: chatId });
+  if (!conversation) {
+    const stage = await findStageBy('ready');
+    const data = await createConversation({
+      title: msg.chat.title,
+      chat_id: msg.chat.id,
+      unreadCount: 0,
+      type: msg.chat.type,
+      stage: stage._id,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    });
+    stage.conversations.push(data._id);
+    await stage.save();
+    await registerConversationHandlers.getConversations();
+    await registerBoardHandlers.getStatuses();
+  }
+});
+
+bot.on('group_chat_created', async (msg) => {
+  console.log(msg);
+  const chatId = msg.chat.id;
+  const stage = await findStageBy('ready');
+  const data = await createConversation({
+    title: msg.chat.title,
+    chat_id: msg.chat.id,
+    unreadCount: 0,
+    type: msg.chat.type,
+    stage: stage._id,
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+  });
+  stage.conversations.push(data._id);
+  await stage.save();
+  await registerConversationHandlers.getConversations();
+  await registerBoardHandlers.getStatuses();
+
+  // const me = await bot.getMe();
+  // if (me.id != msg.new_chat_member.id) return;
+  // const conversation = await findOneConversation({ chat_id: chatId });
+  // if (!conversation) {
+  //   const stage = await findStageBy('ready');
+  //   const data = await createConversation({
+  //     title: msg.chat.title,
+  //     chat_id: msg.chat.id,
+  //     unreadCount: 0,
+  //     stage: stage._id,
+  //     createdAt: Date.now(),
+  //     updatedAt: Date.now(),
+  //   });
+  //   stage.conversations.push(data._id);
+  //   await stage.save();
+  //   await registerBoardHandlers.getStatuses();
+  // }
 });
 
 httpServer.listen(5005, () => {
