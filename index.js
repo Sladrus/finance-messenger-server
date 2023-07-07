@@ -157,12 +157,16 @@ bot.on('photo', async (msg) => {
 });
 
 bot.on('text', async (msg) => {
-  const chatId = msg.chat.id;
-  msg.type = 'text';
+  try {
+    const chatId = msg.chat.id;
+    msg.type = 'text';
 
-  // console.log(conversation);
-  await registerMessageHandlers.addMessage(msg, chatId);
-  await registerConversationHandlers.getConversations();
+    // console.log(conversation);
+    await registerMessageHandlers.addMessage(msg, chatId);
+    await registerConversationHandlers.getConversations();
+  } catch (e) {
+    console.log(e);
+  }
 });
 
 bot.on('migrate_to_chat_id', async (msg) => {

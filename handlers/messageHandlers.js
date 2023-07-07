@@ -65,7 +65,7 @@ module.exports = (io, socket) => {
       await registerNotificationHandlers.pushNotification(msg);
 
     await getMessages();
-    await registerBoardHandlers.getStatuses();
+    // await registerBoardHandlers.getStatuses();
   };
 
   const addMessageWithRetry = async (message, chatId) => {

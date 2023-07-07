@@ -17,26 +17,50 @@ class ConversationService {
     return conversation;
   }
 
-  async findAllConversations() {
-    const conversations = await ConversationModel.find()
-      .populate({
-        path: 'messages',
-      })
-      .populate({ path: 'stage' })
-      .populate({ path: 'user' });
+  async findAllConversations(filter) {
+    try {
+      // console.log(filter);
+      const conversations = await ConversationModel.find()
+        .sort({ updatedAt: -1 })
+        .populate({
+          path: 'messages',
+        })
+        .populate({ path: 'stage' })
+        .populate({ path: 'user' });
 
-    conversations.forEach(async (conversation) => {
-      conversation.unreadCount = conversation.messages.reduce(
-        (count, message) => {
-          return message.unread ? count + 1 : count;
-        },
-        0
-      );
+      conversations.forEach(async (conversation) => {
+        conversation.unreadCount = conversation.messages.reduce(
+          (count, message) => {
+            return message.unread ? count + 1 : count;
+          },
+          0
+        );
 
-      await conversation.save();
-    });
+        await conversation.save();
+      });
 
-    return conversations;
+      // var filteredConversations = conversations.filter((conversation) => {
+      //   // Check if the conversation's stage has a specific value
+      //   return (
+      //     conversation?.stage && conversation.stage.value === filter?.stage
+      //   );
+      // });
+      // // console.log(filteredConversations);
+
+      // filteredConversations = filteredConversations.filter((conversation) => {
+      //   // Check if the conversation's stage has a specific value
+      //   // console.log(conversation.user._id, filter?.user, 'TYT');
+      //   return (
+      //     conversation?.user &&
+      //     conversation.user._id.toString() === filter?.user
+      //   );
+      // });
+      // console.log(filteredConversations);
+
+      return conversations;
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   async findOneConversation(filter) {
@@ -78,6 +102,7 @@ class ConversationService {
 
       // Save the updated conversation
       await conversation.save();
+      return;
     }
 
     return conversation;

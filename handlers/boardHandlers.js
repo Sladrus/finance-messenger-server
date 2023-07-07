@@ -21,13 +21,13 @@ module.exports = (io, socket) => {
   const updateStatuses = async (newStages) => {
     const stages = await updateStages(newStages);
     await getStatuses();
-    await registerConversationHandlers.getConversations();
+    // await registerConversationHandlers.getConversations();
   };
 
   const updateStatus = async ({ id, value }) => {
     const stage = await changeStage(id, value);
     await getStatuses();
-    await registerConversationHandlers.getConversations();
+    // await registerConversationHandlers.getConversations();
   };
 
   socket.on('status:get', getStatuses);

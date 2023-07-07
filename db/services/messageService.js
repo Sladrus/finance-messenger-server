@@ -9,11 +9,10 @@ class MessageService {
     }
     const message = await MessageModel.create(msg);
     conversation.messages.push(message._id);
+    conversation.updatedAt = Date.now();
     await conversation.save();
     return message;
   }
-
-
 }
 
 module.exports = new MessageService();

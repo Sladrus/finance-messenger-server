@@ -34,8 +34,8 @@ userSchema.pre('save', async function (next) {
 
 const UserModel = mongoose.model('user', userSchema);
 // const newUser = new UserModel({
-//   username: 'Катя | Moneyport',
-//   email: 'kate@example.com',
+//   username: 'Миша | Moneyport',
+//   email: 'misha@example.com',
 //   password: 'example',
 // });
 
