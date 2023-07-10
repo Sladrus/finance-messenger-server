@@ -159,7 +159,7 @@ bot.on('photo', async (msg) => {
 bot.on('document', async (msg) => {
   console.log(msg);
   const chatId = msg.chat.id;
-  
+
   msg.unread = true;
   msg.type = 'document';
   msg.text = msg?.caption;
@@ -206,7 +206,9 @@ bot.on('new_chat_members', async (msg) => {
   const me = await bot.getMe();
   if (me.id != msg.new_chat_member.id) {
     const conversation = await findOneConversation({ chat_id: chatId });
-    // const stage = await findStageBy('free');
+    await changeStage(conversation._id, 'raw');
+
+    // const stage = await findStageBy('raw');
     msg.type = 'event';
     msg.members = [];
     msg.members.push(msg.new_chat_member);
@@ -218,7 +220,6 @@ bot.on('new_chat_members', async (msg) => {
 
     console.log(msg);
     await registerMessageHandlers.addMessage(msg, chatId);
-    await changeStage(conversation._id, 'free');
     await registerConversationHandlers.getConversations();
     return await registerBoardHandlers.getStatuses();
   }
