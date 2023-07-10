@@ -15,6 +15,7 @@ module.exports = (io, socket) => {
 
   const addStatus = async (newStage) => {
     const stage = await createStage(newStage);
+    console.log(stage);
     await getStatuses();
   };
 

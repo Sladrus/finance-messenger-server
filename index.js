@@ -115,7 +115,7 @@ const onConnection = (socket) => {
   socket.on('login', async ({ username, password }) => {
     try {
       const user = await UserModel.findOne({ email: username });
-      if (!user) throw new Error('Неверное имя пользователя');
+      if (!user) throw new Error('Неверное имя пользователя или пароль');
       const isPasswordValid = await user.comparePassword(password);
       if (!isPasswordValid)
         throw new Error('Неверное имя пользователя или пароль');
@@ -156,6 +156,17 @@ bot.on('photo', async (msg) => {
   await registerConversationHandlers.getConversations();
 });
 
+bot.on('document', async (msg) => {
+  console.log(msg);
+  const chatId = msg.chat.id;
+  
+  msg.unread = true;
+  msg.type = 'document';
+  msg.text = msg?.caption;
+  await registerMessageHandlers.addMessage(msg, chatId);
+  await registerConversationHandlers.getConversations();
+});
+
 bot.on('text', async (msg) => {
   try {
     const chatId = msg.chat.id;
@@ -170,6 +181,8 @@ bot.on('text', async (msg) => {
 });
 
 bot.on('migrate_to_chat_id', async (msg) => {
+  console.log(msg);
+
   const chatId = msg.chat.id; // ID чата, откуда пришло сообщение
   const conversation = await findOneConversation({ chat_id: chatId });
   if (!conversation) return;
@@ -179,6 +192,11 @@ bot.on('migrate_to_chat_id', async (msg) => {
   });
   // conversations[conversationIndex].chat_id = msg.migrate_to_chat_id;
   // conversations[conversationIndex].type = 'supergroup';
+  msg.type = 'event';
+  msg.text = `Чат "${msg.chat.title}" стал супергруппой`;
+  msg.unread = false;
+  await registerMessageHandlers.addMessage(msg, msg.migrate_to_chat_id);
+
   await registerConversationHandlers.getConversations();
   return await registerBoardHandlers.getStatuses();
 });
@@ -189,12 +207,24 @@ bot.on('new_chat_members', async (msg) => {
   if (me.id != msg.new_chat_member.id) {
     const conversation = await findOneConversation({ chat_id: chatId });
     // const stage = await findStageBy('free');
+    msg.type = 'event';
+    msg.members = [];
+    msg.members.push(msg.new_chat_member);
+    msg.text = `Пользователь ${
+      msg.new_chat_member?.last_name
+        ? msg.new_chat_member.first_name + ' ' + msg.new_chat_member?.last_name
+        : msg.new_chat_member.first_name
+    } вошел в чат`;
+
+    console.log(msg);
+    await registerMessageHandlers.addMessage(msg, chatId);
     await changeStage(conversation._id, 'free');
     await registerConversationHandlers.getConversations();
     return await registerBoardHandlers.getStatuses();
   }
   const conversation = await findOneConversation({ chat_id: chatId });
   if (!conversation) {
+    const chatId = msg.chat.id;
     const stage = await findStageBy('ready');
     const data = await createConversation({
       title: msg.chat.title,
@@ -207,9 +237,28 @@ bot.on('new_chat_members', async (msg) => {
     });
     stage.conversations.push(data._id);
     await stage.save();
+
     await registerConversationHandlers.getConversations();
     await registerBoardHandlers.getStatuses();
   }
+});
+
+bot.on('new_chat_title', async (msg) => {
+  console.log(msg);
+  const chatId = msg.chat.id;
+  const conversation = await findOneConversation({ chat_id: chatId });
+  if (!conversation) return;
+  await updateConversation(conversation._id, {
+    title: msg.new_chat_title,
+  });
+  msg.type = 'event';
+  msg.text = `Название чата сменилось на "${msg.new_chat_title}"`;
+  msg.unread = false;
+
+  // console.log(conversation);
+  await registerMessageHandlers.addMessage(msg, chatId);
+  await registerConversationHandlers.getConversations();
+  await registerBoardHandlers.getStatuses();
 });
 
 bot.on('group_chat_created', async (msg) => {
@@ -227,26 +276,14 @@ bot.on('group_chat_created', async (msg) => {
   });
   stage.conversations.push(data._id);
   await stage.save();
+  msg.type = 'event';
+  msg.text = `Чат "${msg.chat.title}" создан`;
+  msg.unread = false;
+
+  // console.log(conversation);
+  await registerMessageHandlers.addMessage(msg, chatId);
   await registerConversationHandlers.getConversations();
   await registerBoardHandlers.getStatuses();
-
-  // const me = await bot.getMe();
-  // if (me.id != msg.new_chat_member.id) return;
-  // const conversation = await findOneConversation({ chat_id: chatId });
-  // if (!conversation) {
-  //   const stage = await findStageBy('ready');
-  //   const data = await createConversation({
-  //     title: msg.chat.title,
-  //     chat_id: msg.chat.id,
-  //     unreadCount: 0,
-  //     stage: stage._id,
-  //     createdAt: Date.now(),
-  //     updatedAt: Date.now(),
-  //   });
-  //   stage.conversations.push(data._id);
-  //   await stage.save();
-  //   await registerBoardHandlers.getStatuses();
-  // }
 });
 
 httpServer.listen(5005, () => {

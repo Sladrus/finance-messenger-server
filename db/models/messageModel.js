@@ -7,13 +7,16 @@ var messageSchema = new Schema({
   unread: { type: Boolean, required: true, default: true },
   from: {},
   chat: {},
+  members: [],
+  document: {},
   date: {
     type: Number,
     required: true,
   },
+  photo: [],
   text: {
     type: String,
-    required: true,
+    required: false,
   },
   type: {
     type: String,

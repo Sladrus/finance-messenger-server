@@ -5,6 +5,7 @@ var stageSchema = new Schema({
     type: String,
     required: true,
   },
+  default: { type: Boolean, required: true },
   color: {
     type: String,
     required: true,
@@ -12,6 +13,7 @@ var stageSchema = new Schema({
   value: {
     type: String,
     required: true,
+    unique: true,
   },
   conversations: [
     {
@@ -22,5 +24,29 @@ var stageSchema = new Schema({
 });
 
 const StageModel = mongoose.model('stage', stageSchema);
+
+const defaultStages = [
+  {
+    label: 'Свободные чаты',
+    default: true,
+    color: 'white',
+    value: 'ready',
+  },
+  {
+    label: 'Необработанные чаты',
+    default: true,
+    color: 'dodgerblue',
+    value: 'raw',
+  },
+  { label: 'В работе', default: true, color: 'gold', value: 'work' },
+  {
+    label: 'Активированные',
+    default: true,
+    color: 'limegreen',
+    value: 'active',
+  },
+];
+
+StageModel.create(defaultStages).catch((e) => console.log(e));
 
 module.exports = { StageModel };
