@@ -130,7 +130,7 @@ const onConnection = (socket) => {
   // регистрируем обработчики
   // обратите внимание на передаваемые аргументы
   registerMessageHandlers(io, socket);
-  // registerUserHandlers(io, socket);
+  registerUserHandlers(io, socket);
   registerConversationHandlers(io, socket);
   registerBoardHandlers(io, socket);
   registerNotificationHandlers(io, socket);
@@ -206,7 +206,7 @@ bot.on('new_chat_members', async (msg) => {
   const me = await bot.getMe();
   if (me.id != msg.new_chat_member.id) {
     const conversation = await findOneConversation({ chat_id: chatId });
-    await changeStage(conversation._id, 'raw');
+    await changeStage(conversation._id, 'raw', -1);
 
     // const stage = await findStageBy('raw');
     msg.type = 'event';

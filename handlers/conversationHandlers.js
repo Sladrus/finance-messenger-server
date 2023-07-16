@@ -3,6 +3,7 @@ const {
   findAllConversations,
   updateConversation,
 } = require('../db/services/conversationService');
+const { addMessage } = require('./messageHandlers');
 
 module.exports = (io, socket) => {
   const getConversations = async () => {
@@ -20,13 +21,14 @@ module.exports = (io, socket) => {
     const createdConversation = await updateConversation(newConversation._id, {
       user: newConversation?.user,
     });
+    // await addMessage()
     await getConversations();
   };
 
   // регистрируем обработчики
   socket.on('conversation:get', getConversations);
   // socket.on('conversation:add', addConversation);
-  socket.on('conversation:update', changeConversation);
+  socket.on('conversation:link', changeConversation);
 
   //   socket.on('message:remove', removeMessage);
   // module.exports.addConversation = addConversation;

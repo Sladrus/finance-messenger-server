@@ -52,25 +52,33 @@ class StageService {
     );
   }
 
-  async changeStage(id, value) {
-    try {
-      const conversation = await ConversationModel.findOne({ _id: id });
-      const { _id: conversationId, stage: oldStageId } = conversation;
-      const newStage = await StageModel.findOne({ value: value });
-      const oldStage = await StageModel.findOne({ _id: oldStageId });
+  async changeStage(id, value, position) {
+    const conversation = await ConversationModel.findOne({ _id: id });
+    const { _id: conversationId, stage: oldStageId } = conversation;
+    const newStage = await StageModel.findOne({ value: value });
+    const oldStage = await StageModel.findOne({ _id: oldStageId });
 
-      await ConversationModel.findByIdAndUpdate(id, { stage: newStage._id });
-
+    if (newStage._id.toString() === oldStage._id.toString()) {
       oldStage.conversations.pull(conversationId);
-      newStage.conversations.push(conversationId);
-
+      if (position === -1) {
+        oldStage.conversations.unshift(conversationId); // Вставляем в начало массива
+      } else {
+        oldStage.conversations.splice(position, 0, conversationId); // Вставляем на указанную позицию
+      }
+      await Promise.all([oldStage.save(), conversation.save()]);
+    } else {
+      await ConversationModel.findByIdAndUpdate(id, { stage: newStage._id });
+      oldStage.conversations.pull(conversationId);
+      if (position === -1) {
+        newStage.conversations.unshift(conversationId); // Вставляем в начало массива
+      } else {
+        newStage.conversations.splice(position, 0, conversationId); // Вставляем на указанную позицию
+      }
       await Promise.all([
         oldStage.save(),
         newStage.save(),
         conversation.save(),
       ]);
-    } catch (error) {
-      console.error('Ошибка изменения стадии:', error);
     }
   }
 }

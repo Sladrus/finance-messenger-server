@@ -25,8 +25,8 @@ module.exports = (io, socket) => {
     // await registerConversationHandlers.getConversations();
   };
 
-  const updateStatus = async ({ id, value }) => {
-    const stage = await changeStage(id, value);
+  const updateStatus = async ({ id, value, position }) => {
+    const stage = await changeStage(id, value, position);
     await getStatuses();
     // await registerConversationHandlers.getConversations();
   };
