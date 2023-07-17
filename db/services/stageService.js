@@ -23,6 +23,28 @@ class StageService {
     return stages;
   }
 
+  async deleteStage(stage) {
+    try {
+      await StageModel.deleteOne({ _id: stage.id });
+      // await newStage.delete();
+      // return newStage;
+    } catch (e) {
+      console.log(e);
+    }
+  }
+
+  async updateStage(stage) {
+    try {
+      const newStage = await StageModel.findOneAndUpdate(
+        { _id: stage.id },
+        { $set: { value: stage.value, label: stage.label, color: stage.color } }
+      );
+      return newStage;
+    } catch (e) {
+      console.log(e);
+    }
+  }
+
   async addConversationToStage(id, value) {
     // console.log(id, value);
     const stage = await StageModel.findOne({ value: value });
