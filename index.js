@@ -123,6 +123,7 @@ const onConnection = (socket) => {
       await saveToken(user._id, tokens.refreshToken);
       socket.emit('success', { ...tokens, user });
     } catch (error) {
+      console.log(error);
       socket.emit('error', error.message);
     }
   });
