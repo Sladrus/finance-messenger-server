@@ -3,7 +3,7 @@ const {
   findAllConversations,
   updateConversation,
 } = require('../db/services/conversationService');
-const { addMessage } = require('./messageHandlers');
+// const { addMessage } = require('./messageHandlers');
 
 module.exports = (io, socket) => {
   const getConversations = async () => {
