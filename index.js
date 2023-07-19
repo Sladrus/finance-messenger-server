@@ -38,7 +38,7 @@ app.use(
 );
 const httpServer = createServer(app);
 
-const io = new Server(httpServer, { cors: { origin: '*' } });
+const io = new Server(httpServer, { cors: { origin: '*' }, path: '/socket' });
 
 io.use(
   jwtAuth.authenticate(
