@@ -17,6 +17,19 @@ class ConversationService {
     return conversation;
   }
 
+  async linkConversation(chat_id, user) {
+    console.log(chat_id, user);
+    const conversation = await ConversationModel.findOne({ chat_id: chat_id });
+    console.log(conversation);
+
+    await ConversationModel.updateOne(
+      { chat_id: chat_id },
+      { $set: { user: conversation?.user ? null : user?._id } }
+    );
+    // console.log(conversation);
+    return conversation;
+  }
+
   async findAllConversations(filter) {
     try {
       // console.log(filter);

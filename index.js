@@ -5,6 +5,7 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 var jwtAuth = require('socketio-jwt-auth');
+require('dotenv').config();
 
 const registerMessageHandlers = require('./handlers/messageHandlers');
 const registerUserHandlers = require('./handlers/userHandlers');
@@ -66,7 +67,7 @@ io.use(
 
 mongoose
   .connect(
-    'mongodb+srv://root:root@cluster0.kc0ptcm.mongodb.net/?retryWrites=true&w=majority',
+    process.env.DB_URL,
     {
       useNewUrlParser: true,
       useUnifiedTopology: true,

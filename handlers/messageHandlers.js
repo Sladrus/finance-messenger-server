@@ -31,7 +31,6 @@ module.exports = (io, socket) => {
       console.log(e);
     }
   };
-
   const addMessage = async (message, chatId) => {
     console.log(message);
     const msg = message?.isBot
