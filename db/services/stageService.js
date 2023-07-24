@@ -15,10 +15,12 @@ class StageService {
   }
 
   async findStages() {
-    const stages = await StageModel.find().populate({
-      path: 'conversations',
-      populate: [{ path: 'messages' }, { path: 'user' }],
-    });
+    const stages = await StageModel.find()
+      .sort({ _id: 1 })
+      .populate({
+        path: 'conversations',
+        populate: [{ path: 'messages' }, { path: 'user' }],
+      });
     // console.log(stages.conversations);
     return stages;
   }
