@@ -16,6 +16,7 @@ const { createMessage } = require('../db/services/messageService');
 const { bot } = require('../telegram');
 const registerBoardHandlers = require('../handlers/boardHandlers');
 const registerNotificationHandlers = require('../handlers/notificationHandlers');
+const { findStages } = require('../db/services/stageService');
 
 module.exports = (io, socket) => {
   const getStatuses = async () => {
