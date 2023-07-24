@@ -18,6 +18,11 @@ const registerBoardHandlers = require('../handlers/boardHandlers');
 const registerNotificationHandlers = require('../handlers/notificationHandlers');
 
 module.exports = (io, socket) => {
+  const getStatuses = async () => {
+    console.log('STAGES');
+    const stages = await findStages();
+    io.emit('statuses', stages);
+  };
   // обрабатываем запрос на получение сообщений
   const getMessages = async () => {
     console.log('MESSAGES');
@@ -64,6 +69,7 @@ module.exports = (io, socket) => {
       await registerNotificationHandlers.pushNotification(msg);
 
     await getMessages();
+    await getStatuses();
     // await registerBoardHandlers.getStatuses();
   };
 
