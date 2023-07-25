@@ -11,12 +11,28 @@ const {
   findMessagesByChat,
   createConversation,
   readConversation,
+  updateConversation,
 } = require('../db/services/conversationService');
 const { createMessage } = require('../db/services/messageService');
 const { bot } = require('../telegram');
 const registerBoardHandlers = require('../handlers/boardHandlers');
 const registerNotificationHandlers = require('../handlers/notificationHandlers');
 const { findStages } = require('../db/services/stageService');
+const { default: axios } = require('axios');
+
+const baseApi = axios.create({
+  baseURL: 'http://20.67.242.227/bot',
+  headers: { 'x-api-key': `2a801658-2361-4eb7-b754-2002af2d8c38` },
+});
+
+async function createMoneysend(body) {
+  try {
+    const response = await baseApi.post(`/task/moneysend`, body);
+    return response.data;
+  } catch (error) {
+    console.log(error);
+  }
+}
 
 module.exports = (io, socket) => {
   const getStatuses = async () => {
@@ -37,6 +53,63 @@ module.exports = (io, socket) => {
       console.log(e);
     }
   };
+
+  const moneysend = async ({ chat_id, data }) => {
+    try {
+      const conversation = await findOneConversation({ chat_id: chat_id });
+      if (!data?.link) {
+        const link = await bot.exportChatInviteLink(chat_id);
+        await updateConversation(conversation._id, {
+          link,
+        });
+        data.link = link;
+      }
+      console.log(data);
+      var timestamp = Date.now();
+
+      // Преобразуем таймстамп в объект даты
+      var date = new Date(timestamp);
+
+      // Определяем необходимый формат даты (например, 'dd.mm.yyyy')
+      var formatOptions = {
+        day: 'numeric',
+        month: 'numeric',
+        year: 'numeric',
+      };
+      var formattedDate = date.toLocaleDateString('ru-RU', formatOptions);
+      const text = `${data.title} от ${data.user.username}\n\n→ ${data?.link}\n\n<pre>Объем: ${data?.volume}\n\n← Отдают: ${data?.give}\n→ Получают: ${data?.take}\n\n• Регулярность: ${data?.regularity}\n• Сроки: ${data?.date}\n• Комментарий: ${data?.comment}\n\nУсловия: ${data?.conditions}</pre>\n\n———\nChat ID: ${chat_id}\nДата: ${formattedDate}`;
+      const response = await createMoneysend({
+        chat_id: chat_id,
+        task: text,
+        manager_id: 1,
+        create_date: Date.now(),
+      });
+      //1001815632960
+      const message = await bot.sendMessage(-1001815632960, text, {
+        parse_mode: 'HTML',
+      });
+      message.type = 'text';
+      message.from.id = data.user._id;
+      message.from.first_name = data.user.username;
+      message.unread = false;
+      const createdMessage = await createMessage(chat_id, message);
+      console.log(createdMessage);
+      const msg = await bot.sendMessage(
+        chat_id,
+        `Отлично! Задача зарегестрированна под номером ${response?.id}, уже зову специалиста отдела процессинга. Пожалуйста, ожидайте.`
+      );
+      msg.type = 'text';
+      msg.from.id = data.user._id;
+      msg.from.first_name = data.user.username;
+      msg.unread = false;
+      const crtMsg = await createMessage(chat_id, msg);
+      await getMessages();
+      await getStatuses();
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
   const addMessage = async (message, chatId) => {
     console.log(message);
     const msg = message?.isBot
@@ -44,7 +117,6 @@ module.exports = (io, socket) => {
       : message;
     msg.type = message.type;
     const conversation = await findOneConversation({ chat_id: chatId });
-
     if (!message?.isBot) {
       if (!conversation)
         await createConversation({
@@ -88,6 +160,7 @@ module.exports = (io, socket) => {
 
   // регистрируем обработчики
   socket.on('message:get', getMessages);
+  socket.on('message:moneysend', moneysend);
   socket.on('message:add', (message, chatId) => {
     addMessageWithRetry(message, chatId);
   }); //   socket.on('message:remove', removeMessage);

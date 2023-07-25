@@ -166,7 +166,9 @@ bot.on('document', async (msg) => {
   await registerConversationHandlers.getConversations();
 });
 
-bot.on('message', async (msg) => {
+bot.on('message', async (msg) => {});
+
+bot.on('text', async (msg) => {
   try {
     const chatId = msg.chat.id;
     const conversation = await findOneConversation({ chat_id: chatId });
@@ -193,9 +195,6 @@ bot.on('message', async (msg) => {
   } catch (e) {
     console.log(e);
   }
-});
-
-bot.on('text', async (msg) => {
   try {
     const chatId = msg.chat.id;
     msg.type = 'text';
@@ -232,10 +231,14 @@ bot.on('new_chat_members', async (msg) => {
   if (me.id != msg.new_chat_member.id) {
     const conversation = await findOneConversation({ chat_id: chatId });
     if (!conversation?.link) {
-      const link = await bot.exportChatInviteLink(chatId);
-      await updateConversation(conversation._id, {
-        link,
-      });
+      try {
+        const link = await bot.exportChatInviteLink(chatId);
+        await updateConversation(conversation._id, {
+          link,
+        });
+      } catch (e) {
+        console.log(e);
+      }
     }
     await changeStage(conversation._id, 'raw', -1);
 
