@@ -92,7 +92,7 @@ module.exports = (io, socket) => {
       message.from.id = data.user._id;
       message.from.first_name = data.user.username;
       message.unread = false;
-      const createdMessage = await createMessage(chat_id, message);
+      const createdMessage = await createMessage(-1001815632960, message);
       console.log(createdMessage);
       const msg = await bot.sendMessage(
         chat_id,
