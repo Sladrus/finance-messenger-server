@@ -66,13 +66,10 @@ io.use(
 );
 
 mongoose
-  .connect(
-    process.env.DB_URL,
-    {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    }
-  )
+  .connect(process.env.DB_URL, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
   .catch((error) => console.log(error));
 
 // createStage({ label: 'Идет сделка', value: 'deal', color: 'mediumslateblue' });
@@ -183,13 +180,13 @@ bot.on('text', async (msg) => {
 });
 
 bot.on('migrate_to_chat_id', async (msg) => {
-  console.log(msg);
-
   const chatId = msg.chat.id; // ID чата, откуда пришло сообщение
+  const link = await bot.exportChatInviteLink(msg.migrate_to_chat_id);
   const conversation = await findOneConversation({ chat_id: chatId });
   if (!conversation) return;
   await updateConversation(conversation._id, {
     chat_id: msg.migrate_to_chat_id,
+    link,
     type: 'supergroup',
   });
   // conversations[conversationIndex].chat_id = msg.migrate_to_chat_id;
@@ -198,7 +195,6 @@ bot.on('migrate_to_chat_id', async (msg) => {
   msg.text = `Чат "${msg.chat.title}" стал супергруппой`;
   msg.unread = false;
   await registerMessageHandlers.addMessage(msg, msg.migrate_to_chat_id);
-
   await registerConversationHandlers.getConversations();
   return await registerBoardHandlers.getStatuses();
 });
@@ -219,15 +215,14 @@ bot.on('new_chat_members', async (msg) => {
         ? msg.new_chat_member.first_name + ' ' + msg.new_chat_member?.last_name
         : msg.new_chat_member.first_name
     } вошел в чат`;
-
-    console.log(msg);
+    conversation.members.push(msg.new_chat_member);
+    await conversation.save();
     await registerMessageHandlers.addMessage(msg, chatId);
     await registerConversationHandlers.getConversations();
     return await registerBoardHandlers.getStatuses();
   }
   const conversation = await findOneConversation({ chat_id: chatId });
   if (!conversation) {
-    const chatId = msg.chat.id;
     const stage = await findStageBy('ready');
     const data = await createConversation({
       title: msg.chat.title,
@@ -240,14 +235,12 @@ bot.on('new_chat_members', async (msg) => {
     });
     stage.conversations.push(data._id);
     await stage.save();
-
     await registerConversationHandlers.getConversations();
     await registerBoardHandlers.getStatuses();
   }
 });
 
 bot.on('new_chat_title', async (msg) => {
-  console.log(msg);
   const chatId = msg.chat.id;
   const conversation = await findOneConversation({ chat_id: chatId });
   if (!conversation) return;
@@ -260,12 +253,11 @@ bot.on('new_chat_title', async (msg) => {
 
   // console.log(conversation);
   await registerMessageHandlers.addMessage(msg, chatId);
-  await registerConversationHandlers.getConversations();
+  await registerConversationHandlers.getConversdations();
   await registerBoardHandlers.getStatuses();
 });
 
 bot.on('group_chat_created', async (msg) => {
-  console.log(msg);
   const chatId = msg.chat.id;
   const stage = await findStageBy('ready');
   const data = await createConversation({
@@ -283,7 +275,6 @@ bot.on('group_chat_created', async (msg) => {
   msg.text = `Чат "${msg.chat.title}" создан`;
   msg.unread = false;
 
-  // console.log(conversation);
   await registerMessageHandlers.addMessage(msg, chatId);
   await registerConversationHandlers.getConversations();
   await registerBoardHandlers.getStatuses();

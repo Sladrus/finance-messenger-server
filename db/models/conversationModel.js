@@ -16,6 +16,8 @@ var conversationSchema = new Schema({
   user: { type: Schema.Types.ObjectId, ref: 'user' },
   messages: [{ type: Schema.Types.ObjectId, ref: 'message' }],
   stage: { type: Schema.Types.ObjectId, ref: 'stage' },
+  members: [],
+  link: { type: String },
   createdAt: {
     type: Date,
     required: true,

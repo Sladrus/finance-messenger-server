@@ -15,6 +15,11 @@ var userSchema = new Schema({
     type: String,
     required: true,
   },
+  role: {
+    type: String,
+    required: true,
+    default: 'USER',
+  },
 });
 
 userSchema.methods.comparePassword = async function (password) {
