@@ -170,10 +170,24 @@ bot.on('message', async (msg) => {
   try {
     const chatId = msg.chat.id;
     const conversation = await findOneConversation({ chat_id: chatId });
-    await updateConversation(conversation._id, {
-      title: msg.chat.title,
-    });
-    await registerConversationHandlers.getConversations();
+    if (!conversation) {
+      const stage = await findStageBy('raw');
+      const data = await createConversation({
+        title: msg.chat.title,
+        chat_id: msg.chat.id,
+        unreadCount: 0,
+        type: msg.chat.type,
+        stage: stage._id,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+    } else {
+      await updateConversation(conversation._id, {
+        title: msg.chat.title,
+      });
+    }
+
+    // await registerConversationHandlers.getConversations();
   } catch (e) {
     console.log(e);
   }
