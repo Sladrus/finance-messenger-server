@@ -203,7 +203,7 @@ bot.on('new_chat_members', async (msg) => {
   if (me.id != msg.new_chat_member.id) {
     const conversation = await findOneConversation({ chat_id: chatId });
     if (!conversation?.link) {
-      const link = await bot.exportChatInviteLink(msg.migrate_to_chat_id);
+      const link = await bot.exportChatInviteLink(chatId);
       await updateConversation(conversation._id, {
         link,
       });
