@@ -229,7 +229,24 @@ bot.on('new_chat_members', async (msg) => {
   const chatId = msg.chat.id;
   const me = await bot.getMe();
   if (me.id != msg.new_chat_member.id) {
-    const conversation = await findOneConversation({ chat_id: chatId });
+    let conversation = await findOneConversation({ chat_id: chatId });
+    if (!conversation) {
+      const stage = await findStageBy('raw');
+      const data = await createConversation({
+        title: msg.chat.title,
+        chat_id: msg.chat.id,
+        unreadCount: 0,
+        type: msg.chat.type,
+        stage: stage._id,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+      stage.conversations.push(data._id);
+      await stage.save();
+      conversation = data;
+    } else {
+      await changeStage(conversation._id, 'raw', -1);
+    }
     if (!conversation?.link) {
       try {
         const link = await bot.exportChatInviteLink(chatId);
@@ -240,9 +257,6 @@ bot.on('new_chat_members', async (msg) => {
         console.log(e);
       }
     }
-    await changeStage(conversation._id, 'raw', -1);
-
-    // const stage = await findStageBy('raw');
     msg.type = 'event';
     msg.members = [];
     msg.members.push(msg.new_chat_member);
