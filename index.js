@@ -181,6 +181,8 @@ bot.on('message', async (msg) => {
         createdAt: Date.now(),
         updatedAt: Date.now(),
       });
+      stage.conversations.push(data._id);
+      await stage.save();
     } else {
       await updateConversation(conversation._id, {
         title: msg.chat.title,
