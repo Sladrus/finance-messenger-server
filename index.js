@@ -181,12 +181,10 @@ bot.on('text', async (msg) => {
 
 bot.on('migrate_to_chat_id', async (msg) => {
   const chatId = msg.chat.id; // ID чата, откуда пришло сообщение
-  const link = await bot.exportChatInviteLink(msg.migrate_to_chat_id);
   const conversation = await findOneConversation({ chat_id: chatId });
   if (!conversation) return;
   await updateConversation(conversation._id, {
     chat_id: msg.migrate_to_chat_id,
-    link,
     type: 'supergroup',
   });
   // conversations[conversationIndex].chat_id = msg.migrate_to_chat_id;
@@ -204,6 +202,12 @@ bot.on('new_chat_members', async (msg) => {
   const me = await bot.getMe();
   if (me.id != msg.new_chat_member.id) {
     const conversation = await findOneConversation({ chat_id: chatId });
+    if (!conversation?.link) {
+      const link = await bot.exportChatInviteLink(msg.migrate_to_chat_id);
+      await updateConversation(conversation._id, {
+        link,
+      });
+    }
     await changeStage(conversation._id, 'raw', -1);
 
     // const stage = await findStageBy('raw');

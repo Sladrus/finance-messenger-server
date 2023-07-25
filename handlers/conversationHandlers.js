@@ -9,6 +9,7 @@ const {
 const { createMessage } = require('../db/services/messageService');
 const { findStages } = require('../db/services/stageService');
 // const { addMessage } = require('./messageHandlers');
+const { bot } = require('../telegram');
 
 const getStatuses = async (io, socket) => {
   console.log('STAGES');
@@ -41,6 +42,22 @@ module.exports = (io, socket) => {
     io.emit('conversations', conversations);
   };
 
+  const refreshLink = async ({ chat_id }) => {
+    try {
+      const link = await bot.exportChatInviteLink(chat_id);
+      const conversation = await findOneConversation({ chat_id: chat_id });
+      await updateConversation(conversation._id, {
+        link,
+      });
+      await getConversations();
+    } catch (e) {
+      console.log(e);
+    }
+
+    // await getMessages(io, socket);
+    // await getStatuses(io, socket);
+  };
+
   const readConversations = async ({ chat_id }) => {
     const conversation = await readConversation(chat_id);
     await getConversations();
@@ -63,7 +80,7 @@ module.exports = (io, socket) => {
           conversation?.user ? 'отвязал' : 'привязал'
         } чат`,
         unread: false,
-        date: Date.now(),
+        date: Date.now() / 1000,
       },
       chat_id
     );
@@ -80,6 +97,7 @@ module.exports = (io, socket) => {
 
   // регистрируем обработчики
   socket.on('conversation:get', getConversations);
+  socket.on('conversation:refresh', refreshLink);
   socket.on('conversation:read', readConversations);
   socket.on('conversation:link', linkConversations);
 
