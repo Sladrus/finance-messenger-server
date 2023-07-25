@@ -37,11 +37,14 @@ userSchema.pre('save', async function (next) {
 });
 
 const UserModel = mongoose.model('user', userSchema);
-// const newUser = new UserModel({
-//   username: 'Тест | Менеджер',
-//   email: 'test',
-//   password: 'test',
-// });
 
-// newUser.save();
+const newUser = new UserModel({
+  username: 'Сергей | Админ',
+  email: 'sergeyadmin',
+  password: 'jI8VLnTY',
+  role: 'ADMIN',
+});
+
+newUser.save().catch((e) => console.log(e));
+
 module.exports = { UserModel };
