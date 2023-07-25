@@ -166,6 +166,19 @@ bot.on('document', async (msg) => {
   await registerConversationHandlers.getConversations();
 });
 
+bot.on('message', async (msg) => {
+  try {
+    const chatId = msg.chat.id;
+    const conversation = await findOneConversation({ chat_id: chatId });
+    await updateConversation(conversation._id, {
+      title: msg.chat.title,
+    });
+    await registerConversationHandlers.getConversations();
+  } catch (e) {
+    console.log(e);
+  }
+});
+
 bot.on('text', async (msg) => {
   try {
     const chatId = msg.chat.id;
@@ -257,7 +270,7 @@ bot.on('new_chat_title', async (msg) => {
 
   // console.log(conversation);
   await registerMessageHandlers.addMessage(msg, chatId);
-  await registerConversationHandlers.getConversdations();
+  await registerConversationHandlers.getConversations();
   await registerBoardHandlers.getStatuses();
 });
 
