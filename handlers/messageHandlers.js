@@ -17,7 +17,7 @@ const { createMessage } = require('../db/services/messageService');
 const { bot } = require('../telegram');
 const registerBoardHandlers = require('../handlers/boardHandlers');
 const registerNotificationHandlers = require('../handlers/notificationHandlers');
-const { findStages } = require('../db/services/stageService');
+const { findStages, changeStage } = require('../db/services/stageService');
 const { default: axios } = require('axios');
 
 const baseApi = axios.create({
@@ -103,6 +103,7 @@ module.exports = (io, socket) => {
       msg.from.first_name = data.user.username;
       msg.unread = false;
       const crtMsg = await createMessage(chat_id, msg);
+      await changeStage(conversation._id, 'task', -1)
       await getMessages();
       await getStatuses();
     } catch (e) {

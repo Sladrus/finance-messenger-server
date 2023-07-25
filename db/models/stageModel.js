@@ -45,6 +45,12 @@ const defaultStages = [
     color: 'limegreen',
     value: 'active',
   },
+  {
+    label: 'Есть задача',
+    default: true,
+    color: 'brown',
+    value: 'task',
+  },
 ];
 
 StageModel.create(defaultStages).catch((e) => console.log(e));
