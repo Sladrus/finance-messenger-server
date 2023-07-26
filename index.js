@@ -26,6 +26,7 @@ const {
 } = require('./db/services/stageService');
 const { UserModel } = require('./db/models/userModel');
 const { TokenModel } = require('./db/models/tokenModel');
+const { default: axios } = require('axios');
 const log = console.log;
 
 const app = express();
@@ -225,6 +226,44 @@ bot.on('migrate_to_chat_id', async (msg) => {
   return await registerBoardHandlers.getStatuses();
 });
 
+const token = process.env.API_TOKEN;
+const officeToken = process.env.OFFICE_TOKEN;
+const officeApi = axios.create({
+  baseURL: 'http://moneyport.ru/office',
+  headers: { 'x-api-key': `${token}` },
+});
+
+async function getOrder(chat_id) {
+  try {
+    const response = await officeApi.get(
+      `/order?chat_id=${chat_id}&api_key=${officeToken}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error(error);
+    return;
+  }
+}
+
+bot.on('left_chat_member', async (msg) => {
+  console.log(msg);
+  const chatId = msg.chat.id;
+  let conversation = await findOneConversation({ chat_id: chatId });
+  msg.type = 'event';
+  msg.text = `Пользователь ${
+    msg.left_chat_member?.last_name
+      ? msg.left_chat_member.first_name + ' ' + msg.left_chat_member?.last_name
+      : msg.left_chat_member.first_name
+  } вышел из чата.`;
+  conversation.members = conversation.members.filter(
+    (member) => member.id !== msg.left_chat_member.id
+  );
+  await conversation.save();
+  await registerMessageHandlers.addMessage(msg, chatId);
+  await registerConversationHandlers.getConversations();
+  return await registerBoardHandlers.getStatuses();
+});
+
 bot.on('new_chat_members', async (msg) => {
   const chatId = msg.chat.id;
   const me = await bot.getMe();
@@ -245,7 +284,10 @@ bot.on('new_chat_members', async (msg) => {
       await stage.save();
       conversation = data;
     } else {
-      await changeStage(conversation._id, 'raw', -1);
+      if (!conversation?.members?.length) {
+        console.log('TYT');
+        await changeStage(conversation._id, 'raw', -1);
+      }
     }
     if (!conversation?.link) {
       try {
@@ -257,6 +299,9 @@ bot.on('new_chat_members', async (msg) => {
         console.log(e);
       }
     }
+    const order = await getOrder(chatId);
+    console.log(order);
+
     msg.type = 'event';
     msg.members = [];
     msg.members.push(msg.new_chat_member);
@@ -264,7 +309,11 @@ bot.on('new_chat_members', async (msg) => {
       msg.new_chat_member?.last_name
         ? msg.new_chat_member.first_name + ' ' + msg.new_chat_member?.last_name
         : msg.new_chat_member.first_name
-    } вошел в чат`;
+    } вошел в чат. ${
+      !conversation?.members?.length && order && order['how_to_send']
+        ? `\n1. Хотите совершить перевод: ${order['how_to_send']} \n2. Валюта получения: ${order['symbol']}\n3. Сумма к получению: ${order['summ']}`
+        : ''
+    }`;
     conversation.members.push(msg.new_chat_member);
     await conversation.save();
     await registerMessageHandlers.addMessage(msg, chatId);

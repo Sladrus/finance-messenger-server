@@ -20,10 +20,14 @@ const registerNotificationHandlers = require('../handlers/notificationHandlers')
 const { findStages, changeStage } = require('../db/services/stageService');
 const { default: axios } = require('axios');
 
+const token = process.env.API_TOKEN;
+
 const baseApi = axios.create({
   baseURL: 'http://20.67.242.227/bot',
-  headers: { 'x-api-key': `2a801658-2361-4eb7-b754-2002af2d8c38` },
+  headers: { 'x-api-key': `${token}` },
 });
+
+
 
 async function createMoneysend(body) {
   try {
@@ -33,6 +37,8 @@ async function createMoneysend(body) {
     console.log(error);
   }
 }
+
+
 
 module.exports = (io, socket) => {
   const getStatuses = async () => {
@@ -96,7 +102,10 @@ module.exports = (io, socket) => {
       console.log(createdMessage);
       const msg = await bot.sendMessage(
         chat_id,
-        `Отлично! Задача зарегестрированна под номером ${response?.id}, уже зову специалиста отдела процессинга. Пожалуйста, ожидайте.`
+        `Отлично! Задача зарегестрированна под номером ${response?.id}, уже зову специалиста отдела процессинга. Пожалуйста, ожидайте.\n\n<pre>Объем: ${data?.volume}\n\n← Отдают: ${data?.give}\n→ Получают: ${data?.take}\n\n• Регулярность: ${data?.regularity}\n• Сроки: ${data?.date}\n• Комментарий: ${data?.comment}\n\nУсловия: ${data?.conditions}</pre>`,
+        {
+          parse_mode: 'HTML',
+        }
       );
       msg.type = 'text';
       msg.from.id = data.user._id;
