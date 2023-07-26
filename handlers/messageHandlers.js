@@ -103,7 +103,7 @@ module.exports = (io, socket) => {
       msg.from.first_name = data.user.username;
       msg.unread = false;
       const crtMsg = await createMessage(chat_id, msg);
-      await changeStage(conversation._id, 'task', -1)
+      await changeStage(conversation._id, 'task', -1);
       await getMessages();
       await getStatuses();
     } catch (e) {

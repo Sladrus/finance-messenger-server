@@ -39,10 +39,9 @@ userSchema.pre('save', async function (next) {
 const UserModel = mongoose.model('user', userSchema);
 
 const newUser = new UserModel({
-  username: 'Сергей | Админ',
-  email: 'sergeyadmin',
-  password: 'jI8VLnTY',
-  role: 'ADMIN',
+  username: "Эрика | Менеджер",
+  email: "sergeyadmin",
+  password: "niywW8oi",
 });
 
 newUser.save().catch((e) => console.log(e));
