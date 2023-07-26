@@ -40,7 +40,7 @@ const UserModel = mongoose.model('user', userSchema);
 
 const newUser = new UserModel({
   username: "Эрика | Менеджер",
-  email: "sergeyadmin",
+  email: "erikamanager",
   password: "niywW8oi",
 });
 
