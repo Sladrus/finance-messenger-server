@@ -285,7 +285,9 @@ bot.on('new_chat_members', async (msg) => {
       conversation = data;
     } else {
       if (!conversation?.members?.length) {
-        console.log('TYT');
+        await updateConversation(conversation._id, {
+          title: msg.chat.title,
+        });
         await changeStage(conversation._id, 'raw', -1);
       }
     }
