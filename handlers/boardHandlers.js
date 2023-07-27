@@ -5,6 +5,7 @@ const {
   changeStage,
   updateStage,
   deleteStage,
+  moveRecordToPosition,
 } = require('../db/services/stageService');
 const registerConversationHandlers = require('../handlers/conversationHandlers');
 
@@ -42,10 +43,16 @@ module.exports = (io, socket) => {
     // await registerConversationHandlers.getConversations();
   };
 
+  const moveStatus = async ({ position, value }) => {
+    const stage = await moveRecordToPosition(position, value);
+    await getStatuses();
+    // await registerConversationHandlers.getConversations();
+  };
   socket.on('status:get', getStatuses);
   socket.on('status:add', addStatus);
   socket.on('status:update', updateStatus);
   socket.on('status:change', changeStatus);
+  socket.on('status:move', moveStatus);
   socket.on('status:delete', deleteStatus);
 
   module.exports.getStatuses = getStatuses;

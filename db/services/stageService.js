@@ -4,7 +4,15 @@ const conversationService = require('./conversationService');
 
 class StageService {
   async createStage(body) {
-    const stage = await StageModel.create(body);
+    const maxPosition = await StageModel.find().sort({ position: -1 }).limit(1);
+
+    let newPosition = 0;
+    if (maxPosition.length > 0) {
+      newPosition = maxPosition[0].position + 1;
+    }
+
+    const newStage = { ...body, position: newPosition };
+    const stage = await StageModel.create(newStage);
     return stage;
   }
 
@@ -16,7 +24,7 @@ class StageService {
 
   async findStages() {
     const stages = await StageModel.find()
-      .sort({ _id: 1 })
+      .sort({ position: 1 })
       .populate({
         path: 'conversations',
         populate: [{ path: 'messages' }, { path: 'user' }],
@@ -45,6 +53,45 @@ class StageService {
     } catch (e) {
       console.log(e);
     }
+  }
+
+  async moveRecordToPosition(position, value) {
+    const totalRecords = await StageModel.countDocuments();
+
+    if (position < 0 || position >= totalRecords) {
+      return;
+    }
+    // Находим запись с данным value
+    const recordToMove = await StageModel.findOne({ value });
+
+    // Проверяем, что запись найдена
+    if (!recordToMove) {
+      return;
+    }
+    const currentPosition = recordToMove.position;
+
+    await StageModel.updateOne(
+      { position },
+      { $set: { position: currentPosition } }
+    );
+
+    // Получаем текущую позицию записи
+    // Обновляем позицию записи на новую переданную позицию
+    recordToMove.position = position;
+    await recordToMove.save();
+    // Обновляем позиции остальных записей
+    // if (currentPosition < position) {
+    //   await StageModel.updateMany(
+    //     { position: { $gt: currentPosition, $lte: position } },
+    //     { $inc: { position: -1 } }
+    //   );
+    // } else if (currentPosition > position) {
+    //   await StageModel.updateMany(
+    //     { position: { $gte: position, $lt: currentPosition } },
+    //     { $inc: { position: 1 } }
+    //   );
+    // }
+    console.log('Запись успешно перемещена');
   }
 
   async addConversationToStage(id, value) {
