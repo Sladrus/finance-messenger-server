@@ -18,6 +18,9 @@ var conversationSchema = new Schema({
   stage: { type: Schema.Types.ObjectId, ref: 'stage' },
   members: [],
   link: { type: String },
+  workAt: {
+    type: Date,
+  },
   createdAt: {
     type: Date,
     required: true,

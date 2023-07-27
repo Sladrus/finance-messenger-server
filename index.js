@@ -247,6 +247,7 @@ async function getOrder(chat_id) {
 
 bot.on('left_chat_member', async (msg) => {
   console.log(msg);
+  if (msg.left_chat_member == 6174655831) return;
   const chatId = msg.chat.id;
   let conversation = await findOneConversation({ chat_id: chatId });
   msg.type = 'event';
@@ -267,6 +268,7 @@ bot.on('left_chat_member', async (msg) => {
 bot.on('new_chat_members', async (msg) => {
   const chatId = msg.chat.id;
   const me = await bot.getMe();
+  if (msg.new_chat_member == 6174655831) return;
   if (me.id != msg.new_chat_member.id) {
     let conversation = await findOneConversation({ chat_id: chatId });
     if (!conversation) {
@@ -287,6 +289,7 @@ bot.on('new_chat_members', async (msg) => {
       if (!conversation?.members?.length) {
         await updateConversation(conversation._id, {
           title: msg.chat.title,
+          workAt: Date.now(),
         });
         await changeStage(conversation._id, 'raw', -1);
       }
@@ -302,8 +305,6 @@ bot.on('new_chat_members', async (msg) => {
       }
     }
     const order = await getOrder(chatId);
-    console.log(order);
-
     msg.type = 'event';
     msg.members = [];
     msg.members.push(msg.new_chat_member);
