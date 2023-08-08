@@ -16,19 +16,28 @@ class StageService {
     return stage;
   }
 
+  async findStageByValue(value) {
+    const stage = await StageModel.findOne({ value }).populate({
+      path: 'conversations',
+      populate: [{ path: 'messages' }, { path: 'user' }],
+    });
+    return stage;
+  }
+
   async findStageBy(value) {
     const stage = await StageModel.findOne({ value });
-    // console.log(stages.conversations);
     return stage;
   }
 
   async findStages() {
-    const stages = await StageModel.find()
-      .sort({ position: 1 })
-      .populate({
-        path: 'conversations',
-        populate: [{ path: 'messages' }, { path: 'user' }],
-      });
+    const stages = await StageModel.find({}, { conversations: 0 }).sort({
+      position: 1,
+    });
+    console.log(stages);
+    //.populate({
+    // path: 'conversations',
+    // populate: [{ path: 'messages' }, { path: 'user' }],
+    // });
     // console.log(stages.conversations);
     return stages;
   }
@@ -45,10 +54,14 @@ class StageService {
 
   async updateStage(stage) {
     try {
-      const newStage = await StageModel.findOneAndUpdate(
+      await StageModel.updateOne(
         { _id: stage.id },
         { $set: { value: stage.value, label: stage.label, color: stage.color } }
       );
+      const newStage = await StageModel.findOne({ _id: stage.id }).populate({
+        path: 'conversations',
+        populate: [{ path: 'messages' }, { path: 'user' }],
+      });
       return newStage;
     } catch (e) {
       console.log(e);
@@ -56,9 +69,9 @@ class StageService {
   }
 
   async moveRecordToPosition(position, value) {
-    const totalRecords = await StageModel.countDocuments();
-
-    if (position < 0 || position >= totalRecords) {
+    const totalRecords = await StageModel.find();
+    console.log(totalRecords.length);
+    if (position < 0 || position > totalRecords.length) {
       return;
     }
     // Находим запись с данным value
@@ -126,8 +139,14 @@ class StageService {
   async changeStage(id, value, position) {
     const conversation = await ConversationModel.findOne({ _id: id });
     const { _id: conversationId, stage: oldStageId } = conversation;
-    const newStage = await StageModel.findOne({ value: value });
-    const oldStage = await StageModel.findOne({ _id: oldStageId });
+    const newStage = await StageModel.findOne({ value: value }).populate({
+      path: 'conversations',
+      populate: [{ path: 'messages' }, { path: 'user' }],
+    });
+    const oldStage = await StageModel.findOne({ _id: oldStageId }).populate({
+      path: 'conversations',
+      populate: [{ path: 'messages' }, { path: 'user' }],
+    });
 
     if (newStage._id.toString() === oldStage._id.toString()) {
       oldStage.conversations.pull(conversationId);
@@ -151,6 +170,15 @@ class StageService {
         conversation.save(),
       ]);
     }
+    const newTmp = await StageModel.findOne({ value: value }).populate({
+      path: 'conversations',
+      populate: [{ path: 'messages' }, { path: 'user' }],
+    });
+    const oldTmp = await StageModel.findOne({ _id: oldStageId }).populate({
+      path: 'conversations',
+      populate: [{ path: 'messages' }, { path: 'user' }],
+    });
+    return { oldTmp, newTmp };
   }
 }
 

@@ -19,6 +19,7 @@ const registerBoardHandlers = require('../handlers/boardHandlers');
 const registerNotificationHandlers = require('../handlers/notificationHandlers');
 const { findStages, changeStage } = require('../db/services/stageService');
 const { default: axios } = require('axios');
+const { getConversations } = require('./conversationHandlers');
 
 const token = process.env.API_TOKEN;
 
@@ -26,8 +27,6 @@ const baseApi = axios.create({
   baseURL: 'http://20.67.242.227/bot',
   headers: { 'x-api-key': `${token}` },
 });
-
-
 
 async function createMoneysend(body) {
   try {
@@ -37,8 +36,6 @@ async function createMoneysend(body) {
     console.log(error);
   }
 }
-
-
 
 module.exports = (io, socket) => {
   const getStatuses = async () => {
@@ -90,7 +87,7 @@ module.exports = (io, socket) => {
         manager_id: 1,
         create_date: Date.now(),
       });
-      //1001815632960
+      //-1001815632960
       const message = await bot.sendMessage(-1001815632960, text, {
         parse_mode: 'HTML',
       });
@@ -99,7 +96,7 @@ module.exports = (io, socket) => {
       message.from.first_name = data.user.username;
       message.unread = false;
       const createdMessage = await createMessage(-1001815632960, message);
-      console.log(createdMessage);
+      // console.log(createdMessage);
       const msg = await bot.sendMessage(
         chat_id,
         `Отлично! Задача зарегестрированна под номером ${response?.id}, уже зову специалиста отдела процессинга. Пожалуйста, ожидайте.\n\n<pre>Объем: ${data?.volume}\n\n← Отдают: ${data?.give}\n→ Получают: ${data?.take}\n\n• Регулярность: ${data?.regularity}\n• Сроки: ${data?.date}\n• Комментарий: ${data?.comment}\n\nУсловия: ${data?.conditions}</pre>`,
@@ -112,21 +109,31 @@ module.exports = (io, socket) => {
       msg.from.first_name = data.user.username;
       msg.unread = false;
       const crtMsg = await createMessage(chat_id, msg);
-      await changeStage(conversation._id, 'task', -1);
+      const { oldTmp, newTmp } = await changeStage(
+        conversation._id,
+        'task',
+        -1
+      );
+      io.emit('statuses:load', { oldTmp, newTmp });
+      const conversationTmp = await findOneConversation({ chat_id: chat_id });
+      io.emit('status:conversation', conversationTmp);
+
       await getMessages();
-      await getStatuses();
+      // io.emit('conversations', conversations);
+      // await getStatuses();
     } catch (e) {
       console.log(e);
     }
   };
 
   const addMessage = async (message, chatId) => {
-    console.log(message);
+    console.log(chatId);
     const msg = message?.isBot
       ? await bot.sendMessage(message.selectedConversation, message.text)
       : message;
     msg.type = message.type;
     const conversation = await findOneConversation({ chat_id: chatId });
+    // console.log(conversation);
     if (!message?.isBot) {
       if (!conversation)
         await createConversation({
@@ -151,9 +158,15 @@ module.exports = (io, socket) => {
     if (!message.isBot)
       await registerNotificationHandlers.pushNotification(msg);
 
+    const conversationTmp = await findOneConversation({
+      chat_id: !message.isBot ? chatId : message.selectedConversation,
+    });
+    if (!message.isBot) {
+      conversationTmp.unreadCount += 1;
+      await conversationTmp.save();
+    }
+    io.emit('status:conversation', conversationTmp);
     await getMessages();
-    await getStatuses();
-    // await registerBoardHandlers.getStatuses();
   };
 
   const addMessageWithRetry = async (message, chatId) => {
@@ -175,4 +188,5 @@ module.exports = (io, socket) => {
     addMessageWithRetry(message, chatId);
   }); //   socket.on('message:remove', removeMessage);
   module.exports.addMessage = addMessage;
+  module.exports.getMessages = getMessages;
 };

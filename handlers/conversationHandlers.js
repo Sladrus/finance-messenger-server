@@ -19,6 +19,7 @@ const getStatuses = async (io, socket) => {
 
 const getMessages = async (io, socket) => {
   console.log('MESSAGES');
+  console.log(socket.roomId, 'TYT');
   if (Number(socket.roomId) === 0) return;
   try {
     const messages = await findMessagesByChat({
@@ -49,20 +50,26 @@ module.exports = (io, socket) => {
       await updateConversation(conversation._id, {
         link,
       });
-      await getConversations();
+      const conversationTmp = await findOneConversation({ chat_id: chat_id });
+      io.emit('status:conversation', conversationTmp);
     } catch (e) {
       console.log(e);
     }
-
-    // await getMessages(io, socket);
-    // await getStatuses(io, socket);
   };
 
   const readConversations = async ({ chat_id }) => {
     const conversation = await readConversation(chat_id);
-    await getConversations();
-    await getMessages(io, socket);
-    await getStatuses(io, socket);
+    // const conversationTmp = await findOneConversation({ chat_id: chat_id });
+
+    io.emit('status:conversation', conversation);
+    const messages = await findMessagesByChat({
+      chat_id: chat_id,
+    });
+    io.in(chat_id).emit('messages', messages);
+    // io.emit('status:conversation', conversation);
+    // await getConversations();
+    // await getMessages(io, socket);
+    // await getStatuses(io, socket);
   };
   // const addConversation = async (conversation, chatId) => {
   //   const createdConversation = await createConversation(conversation);
@@ -77,7 +84,7 @@ module.exports = (io, socket) => {
         type: 'event',
         from: { id: 1274681231, first_name: user.username },
         text: `${user.username} ${
-          conversation?.user ? 'отвязал' : 'привязал'
+          conversation?.user ? 'привязал' : 'отвязал'
         } чат`,
         unread: false,
         date: Date.now() / 1000,
@@ -88,9 +95,16 @@ module.exports = (io, socket) => {
     //   user: newConversation?.user,
     // });
     // await addMessage()
-    await getConversations();
-    await getMessages(io, socket);
-    await getStatuses(io, socket);
+    // await getConversations();
+    const conversationTmp = await findOneConversation({ chat_id: chat_id });
+
+    io.emit('status:conversation', conversationTmp);
+    const messages = await findMessagesByChat({
+      chat_id: chat_id,
+    });
+    io.in(chat_id).emit('messages', messages);
+
+    // await getStatuses(io, socket);
 
     // await getStatuses(io, socket);
   };

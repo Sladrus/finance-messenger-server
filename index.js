@@ -38,9 +38,14 @@ app.use(
     credentials: true,
   })
 );
+
 const httpServer = createServer(app);
 
-const io = new Server(httpServer, { cors: { origin: '*' }, path: '/socket' });
+const io = new Server(httpServer, {
+  cors: { origin: '*' },
+  path: '/socket',
+  compress: true,
+});
 
 io.use(
   jwtAuth.authenticate(
@@ -51,7 +56,6 @@ io.use(
     },
     async function (payload, done) {
       // log(payload);
-
       if (payload && payload?._doc?.email) {
         const user = await UserModel.findOne({ email: payload._doc.email });
         console.log(user, 'USER');
@@ -153,7 +157,7 @@ bot.on('photo', async (msg) => {
   msg.type = 'photo';
   msg.text = msg.caption;
   await registerMessageHandlers.addMessage(msg, chatId);
-  await registerConversationHandlers.getConversations();
+  // await registerConversationHandlers.getConversations();
 });
 
 bot.on('document', async (msg) => {
@@ -164,7 +168,7 @@ bot.on('document', async (msg) => {
   msg.type = 'document';
   msg.text = msg?.caption;
   await registerMessageHandlers.addMessage(msg, chatId);
-  await registerConversationHandlers.getConversations();
+  // await registerConversationHandlers.getConversations();
 });
 
 bot.on('message', async (msg) => {});
@@ -199,10 +203,8 @@ bot.on('text', async (msg) => {
   try {
     const chatId = msg.chat.id;
     msg.type = 'text';
-
-    // console.log(conversation);
     await registerMessageHandlers.addMessage(msg, chatId);
-    await registerConversationHandlers.getConversations();
+    await registerMessageHandlers.getMessages();
   } catch (e) {
     console.log(e);
   }
@@ -222,8 +224,8 @@ bot.on('migrate_to_chat_id', async (msg) => {
   msg.text = `Чат "${msg.chat.title}" стал супергруппой`;
   msg.unread = false;
   await registerMessageHandlers.addMessage(msg, msg.migrate_to_chat_id);
-  await registerConversationHandlers.getConversations();
-  return await registerBoardHandlers.getStatuses();
+  // await registerConversationHandlers.getConversations();
+  // return await registerBoardHandlers.getStatuses();
 });
 
 const token = process.env.API_TOKEN;
@@ -240,7 +242,6 @@ async function getOrder(chat_id) {
     );
     return response.data;
   } catch (error) {
-    console.error(error);
     return;
   }
 }
@@ -261,8 +262,8 @@ bot.on('left_chat_member', async (msg) => {
   );
   await conversation.save();
   await registerMessageHandlers.addMessage(msg, chatId);
-  await registerConversationHandlers.getConversations();
-  return await registerBoardHandlers.getStatuses();
+  // await registerConversationHandlers.getConversations();
+  // return await registerBoardHandlers.getStatuses();
 });
 
 bot.on('new_chat_members', async (msg) => {
@@ -291,7 +292,12 @@ bot.on('new_chat_members', async (msg) => {
           title: msg.chat.title,
           workAt: Date.now(),
         });
-        await changeStage(conversation._id, 'raw', -1);
+        const { oldTmp, newTmp } = await changeStage(
+          conversation._id,
+          'raw',
+          -1
+        );
+        io.emit('statuses:load', { oldTmp, newTmp });
       }
     }
     if (!conversation?.link) {
@@ -320,8 +326,8 @@ bot.on('new_chat_members', async (msg) => {
     conversation.members.push(msg.new_chat_member);
     await conversation.save();
     await registerMessageHandlers.addMessage(msg, chatId);
-    await registerConversationHandlers.getConversations();
-    return await registerBoardHandlers.getStatuses();
+    // await registerConversationHandlers.getConversations();
+    // return await registerBoardHandlers.getStatuses();
   }
   const conversation = await findOneConversation({ chat_id: chatId });
   if (!conversation) {
@@ -337,8 +343,8 @@ bot.on('new_chat_members', async (msg) => {
     });
     stage.conversations.push(data._id);
     await stage.save();
-    await registerConversationHandlers.getConversations();
-    await registerBoardHandlers.getStatuses();
+    // await registerConversationHandlers.getConversations();
+    // await registerBoardHandlers.getStatuses();
   }
 });
 
@@ -355,8 +361,8 @@ bot.on('new_chat_title', async (msg) => {
 
   // console.log(conversation);
   await registerMessageHandlers.addMessage(msg, chatId);
-  await registerConversationHandlers.getConversations();
-  await registerBoardHandlers.getStatuses();
+  // await registerConversationHandlers.getConversations();
+  // await registerBoardHandlers.getStatuses();
 });
 
 bot.on('group_chat_created', async (msg) => {
@@ -378,8 +384,8 @@ bot.on('group_chat_created', async (msg) => {
   msg.unread = false;
 
   await registerMessageHandlers.addMessage(msg, chatId);
-  await registerConversationHandlers.getConversations();
-  await registerBoardHandlers.getStatuses();
+  // await registerConversationHandlers.getConversations();
+  // await registerBoardHandlers.getStatuses();
 });
 
 httpServer.listen(5005, () => {

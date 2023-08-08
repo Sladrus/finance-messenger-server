@@ -20,19 +20,27 @@ class ConversationService {
   async linkConversation(chat_id, user) {
     console.log(chat_id, user);
     const conversation = await ConversationModel.findOne({ chat_id: chat_id });
+
     console.log(conversation);
 
     await ConversationModel.updateOne(
       { chat_id: chat_id },
       { $set: { user: conversation?.user ? null : user?._id } }
     );
+    const conversationTmp = await ConversationModel.findOne({
+      chat_id: chat_id,
+    })
+      .populate({
+        path: 'messages',
+      })
+      .populate({ path: 'stage' })
+      .populate({ path: 'user' });
     // console.log(conversation);
-    return conversation;
+    return conversationTmp;
   }
 
   async findAllConversations(filter) {
     try {
-      // console.log(filter);
       const conversations = await ConversationModel.find()
         .sort({ updatedAt: -1 })
         .populate({
@@ -41,16 +49,16 @@ class ConversationService {
         .populate({ path: 'stage' })
         .populate({ path: 'user' });
 
-      conversations.forEach(async (conversation) => {
-        conversation.unreadCount = conversation.messages.reduce(
-          (count, message) => {
-            return message.unread ? count + 1 : count;
-          },
-          0
-        );
+      // conversations.forEach(async (conversation) => {
+      //   conversation.unreadCount = conversation.messages.reduce(
+      //     (count, message) => {
+      //       return message.unread ? count + 1 : count;
+      //     },
+      //     0
+      //   );
 
-        await conversation.save();
-      });
+      //   await conversation.save();
+      // });
 
       // var filteredConversations = conversations.filter((conversation) => {
       //   // Check if the conversation's stage has a specific value
@@ -77,9 +85,18 @@ class ConversationService {
   }
 
   async findOneConversation(filter) {
-    const conversation = await ConversationModel.findOne(filter).populate(
-      'messages'
-    );
+    const conversation = await ConversationModel.findOne(filter)
+      .populate('messages')
+      .populate({ path: 'stage' })
+      .populate({ path: 'user' });
+    // conversation.unreadCount = conversation?.messages.reduce(
+    //   (count, message) => {
+    //     return message.unread ? count + 1 : count;
+    //   },
+    //   0
+    // );
+
+    // await conversation.save();
     return conversation;
   }
 
@@ -98,7 +115,10 @@ class ConversationService {
   async readConversation(chatId) {
     const conversation = await ConversationModel.findOne({
       chat_id: chatId,
-    }).populate('messages');
+    })
+      .populate('messages')
+      .populate({ path: 'stage' })
+      .populate({ path: 'user' });
 
     if (conversation) {
       // Get all messages in the conversation
@@ -112,10 +132,10 @@ class ConversationService {
         { _id: { $in: messageIds } },
         { unread: false }
       );
-
+      conversation.unreadCount = 0;
       // Save the updated conversation
       await conversation.save();
-      return;
+      return conversation;
     }
 
     return conversation;
