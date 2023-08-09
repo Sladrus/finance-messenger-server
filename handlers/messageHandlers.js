@@ -162,6 +162,7 @@ module.exports = (io, socket) => {
       chat_id: !message.isBot ? chatId : message.selectedConversation,
     });
     if (!message.isBot) {
+      console.log()
       conversationTmp.unreadCount += 1;
       await conversationTmp.save();
     }

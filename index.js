@@ -171,7 +171,19 @@ bot.on('document', async (msg) => {
   // await registerConversationHandlers.getConversations();
 });
 
-bot.on('message', async (msg) => {});
+bot.on('my_chat_member', async (msg) => {
+  if (msg.new_chat_member.user.is_bot) {
+    const chatId = msg.chat.id;
+    console.log(msg.new_chat_member);
+    const status = msg.new_chat_member.status;
+    if (status === 'administrator') {
+      msg.type = 'event';
+      msg.text = 'Права администратора установлены.';
+      await bot.sendMessage(chatId, msg.text);
+      await registerMessageHandlers.addMessage(msg, chatId);
+    }
+  }
+});
 
 bot.on('text', async (msg) => {
   try {

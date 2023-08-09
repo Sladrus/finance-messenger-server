@@ -17,6 +17,28 @@ class ConversationService {
     return conversation;
   }
 
+  async changeuserConversation(chat_id, user) {
+    console.log(chat_id, user);
+    const conversation = await ConversationModel.findOne({
+      chat_id: chat_id,
+    }).populate({ path: 'user' });
+
+    await ConversationModel.updateOne(
+      { chat_id: chat_id },
+      { $set: { user: user ? user?._id : null } }
+    );
+    // const conversationTmp = await ConversationModel.findOne({
+    //   chat_id: chat_id,
+    // })
+    //   .populate({
+    //     path: 'messages',
+    //   })
+    //   .populate({ path: 'stage' })
+    //   .populate({ path: 'user' });
+    // // console.log(conversation);
+    return conversation;
+  }
+
   async linkConversation(chat_id, user) {
     console.log(chat_id, user);
     const conversation = await ConversationModel.findOne({ chat_id: chat_id });
@@ -36,7 +58,7 @@ class ConversationService {
       .populate({ path: 'stage' })
       .populate({ path: 'user' });
     // console.log(conversation);
-    return conversationTmp;
+    return conversation;
   }
 
   async findAllConversations(filter) {
@@ -46,37 +68,11 @@ class ConversationService {
         .populate({
           path: 'messages',
         })
-        .populate({ path: 'stage' })
-        .populate({ path: 'user' });
-
-      // conversations.forEach(async (conversation) => {
-      //   conversation.unreadCount = conversation.messages.reduce(
-      //     (count, message) => {
-      //       return message.unread ? count + 1 : count;
-      //     },
-      //     0
-      //   );
-
-      //   await conversation.save();
-      // });
-
-      // var filteredConversations = conversations.filter((conversation) => {
-      //   // Check if the conversation's stage has a specific value
-      //   return (
-      //     conversation?.stage && conversation.stage.value === filter?.stage
-      //   );
-      // });
-      // // console.log(filteredConversations);
-
-      // filteredConversations = filteredConversations.filter((conversation) => {
-      //   // Check if the conversation's stage has a specific value
-      //   // console.log(conversation.user._id, filter?.user, 'TYT');
-      //   return (
-      //     conversation?.user &&
-      //     conversation.user._id.toString() === filter?.user
-      //   );
-      // });
-      // console.log(filteredConversations);
+        .populate({ path: 'user' })
+        .populate({
+          path: 'stage',
+          select: '-conversations',
+        });
 
       return conversations;
     } catch (error) {

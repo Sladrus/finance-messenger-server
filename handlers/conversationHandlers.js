@@ -5,6 +5,7 @@ const {
   findMessagesByChat,
   linkConversation,
   findOneConversation,
+  changeuserConversation,
 } = require('../db/services/conversationService');
 const { createMessage } = require('../db/services/messageService');
 const { findStages } = require('../db/services/stageService');
@@ -40,7 +41,7 @@ module.exports = (io, socket) => {
   const getConversations = async () => {
     console.log('CONVERSATIONS');
     const conversations = await findAllConversations();
-    io.emit('conversations', conversations);
+    socket.emit('conversations', conversations);
   };
 
   const refreshLink = async ({ chat_id }) => {
@@ -76,6 +77,34 @@ module.exports = (io, socket) => {
   //   await getConversations();
   // };
 
+  const changeuserConversations = async ({ chat_id, user }) => {
+    console.log(chat_id, user);
+    const conversation = await changeuserConversation(chat_id, user);
+    await addMessage(
+      {
+        type: 'event',
+        from: {
+          id: 1274681231,
+          first_name: user ? user.username : conversation.user.username,
+        },
+        text: `${user ? user?.username : conversation.user?.username} ${
+          user ? 'привязал' : 'отвязал'
+        } чат`,
+        unread: false,
+        date: Date.now() / 1000,
+      },
+      chat_id
+    );
+
+    const conversationTmp = await findOneConversation({ chat_id: chat_id });
+
+    io.emit('status:conversation', conversationTmp);
+    const messages = await findMessagesByChat({
+      chat_id: chat_id,
+    });
+    io.in(chat_id).emit('messages', messages);
+  };
+
   const linkConversations = async ({ chat_id, user }) => {
     // console.log(chat_id, user);
     const conversation = await linkConversation(chat_id, user);
@@ -84,18 +113,14 @@ module.exports = (io, socket) => {
         type: 'event',
         from: { id: 1274681231, first_name: user.username },
         text: `${user.username} ${
-          conversation?.user ? 'привязал' : 'отвязал'
+          conversation?.user ? 'отвязал' : 'привязал'
         } чат`,
         unread: false,
         date: Date.now() / 1000,
       },
       chat_id
     );
-    // const createdConversation = await updateConversation(newConversation._id, {
-    //   user: newConversation?.user,
-    // });
-    // await addMessage()
-    // await getConversations();
+
     const conversationTmp = await findOneConversation({ chat_id: chat_id });
 
     io.emit('status:conversation', conversationTmp);
@@ -103,10 +128,6 @@ module.exports = (io, socket) => {
       chat_id: chat_id,
     });
     io.in(chat_id).emit('messages', messages);
-
-    // await getStatuses(io, socket);
-
-    // await getStatuses(io, socket);
   };
 
   // регистрируем обработчики
@@ -114,6 +135,7 @@ module.exports = (io, socket) => {
   socket.on('conversation:refresh', refreshLink);
   socket.on('conversation:read', readConversations);
   socket.on('conversation:link', linkConversations);
+  socket.on('conversation:changeuser', changeuserConversations);
 
   //   socket.on('message:remove', removeMessage);
   // module.exports.addConversation = addConversation;

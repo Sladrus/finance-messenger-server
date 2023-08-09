@@ -12,6 +12,7 @@ var conversationSchema = new Schema({
   unreadCount: {
     type: Number,
     required: true,
+    default: 0,
   },
   user: { type: Schema.Types.ObjectId, ref: 'user' },
   messages: [{ type: Schema.Types.ObjectId, ref: 'message' }],

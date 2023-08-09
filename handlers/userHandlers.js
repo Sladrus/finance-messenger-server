@@ -11,7 +11,7 @@ const users = {
 module.exports = (io, socket) => {
   const getUsers = async () => {
     const users = await findAllUsers();
-    io.emit('users', users);
+    socket.emit('users', users);
   };
 
   socket.on('user:get', getUsers);
