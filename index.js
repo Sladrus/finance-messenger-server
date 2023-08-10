@@ -243,7 +243,7 @@ bot.on('migrate_to_chat_id', async (msg) => {
 const token = process.env.API_TOKEN;
 const officeToken = process.env.OFFICE_TOKEN;
 const officeApi = axios.create({
-  baseURL: 'http://moneyport.ru/office',
+  baseURL: 'http://app.moneyport.ru/office',
   headers: { 'x-api-key': `${token}` },
 });
 
