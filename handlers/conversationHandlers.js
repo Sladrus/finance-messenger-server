@@ -42,7 +42,7 @@ module.exports = (io, socket) => {
     console.log('CONVERSATIONS');
     const conversations = await findAllConversations(
       page,
-      searchInput !== '' ? 50000 : 15,
+      searchInput !== '' ? 50000 : 50,
       searchInput
     );
     console.log(conversations);
