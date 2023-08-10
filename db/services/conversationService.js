@@ -1,6 +1,7 @@
 const { ConversationModel } = require('../models/conversationModel');
 const { MessageModel } = require('../models/messageModel');
-const { addConversationToStage } = require('./stageService');
+const { StageModel } = require('../models/stageModel');
+const { addConversationToStage, findStageByValue } = require('./stageService');
 
 class ConversationService {
   async createConversation(body) {
@@ -61,11 +62,43 @@ class ConversationService {
     return conversation;
   }
 
-  async findAllConversations(page, limit, searchInput) {
+  async findAllConversations(page, limit, searchInput, filter, dateRange) {
     try {
-      const conversations = await ConversationModel.find({
+      console.log(filter, dateRange);
+      const query = {
         title: { $regex: searchInput, $options: 'i' },
-      })
+      };
+
+      if (filter?.stage) {
+        const stage = await StageModel.findOne({ value: filter.stage });
+        console.log(stage._id);
+        query['stage'] = stage._id;
+      }
+
+      if (filter?.user === '') {
+        query['user'] = { $exists: true };
+      } else if (filter?.user === null) {
+        query['user'] = null;
+      } else if (filter?.user) {
+        query['user'] = filter.user;
+      }
+
+      if (filter?.unread !== '') {
+        const unread = filter.unread === true ? { $gt: 0 } : { $eq: 0 };
+        query['unreadCount'] = unread;
+      }
+
+      const startDate = new Date(dateRange[0].startDate);
+      startDate.setHours(0, 0, 0, 0);
+      const endDate = new Date(dateRange[0].endDate);
+      endDate.setHours(23, 59, 59, 999);
+
+      query['workAt'] = {
+        $gte: startDate,
+        $lte: endDate,
+      };
+
+      const conversations = await ConversationModel.find(query)
         .sort({ updatedAt: -1 })
         .limit(page * limit)
         .populate({

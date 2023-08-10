@@ -38,9 +38,15 @@ const addMessage = async (message, chatId) => {
 };
 
 module.exports = (io, socket) => {
-  const getConversations = async ({ page, searchInput }) => {
+  const getConversations = async ({ page, searchInput, filter, dateRange }) => {
     console.log('CONVERSATIONS');
-    const conversations = await findAllConversations(page, 50, searchInput);
+    const conversations = await findAllConversations(
+      page,
+      50,
+      searchInput,
+      filter,
+      dateRange
+    );
     console.log(conversations);
     socket.emit('conversations', conversations);
   };
@@ -61,22 +67,13 @@ module.exports = (io, socket) => {
 
   const readConversations = async ({ chat_id }) => {
     const conversation = await readConversation(chat_id);
-    // const conversationTmp = await findOneConversation({ chat_id: chat_id });
 
     io.emit('status:conversation', conversation);
     const messages = await findMessagesByChat({
       chat_id: chat_id,
     });
     io.in(chat_id).emit('messages', messages);
-    // io.emit('status:conversation', conversation);
-    // await getConversations();
-    // await getMessages(io, socket);
-    // await getStatuses(io, socket);
   };
-  // const addConversation = async (conversation, chatId) => {
-  //   const createdConversation = await createConversation(conversation);
-  //   await getConversations();
-  // };
 
   const changeuserConversations = async ({ chat_id, user }) => {
     console.log(chat_id, user);
