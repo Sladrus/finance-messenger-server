@@ -38,9 +38,14 @@ const addMessage = async (message, chatId) => {
 };
 
 module.exports = (io, socket) => {
-  const getConversations = async () => {
+  const getConversations = async ({ page, searchInput }) => {
     console.log('CONVERSATIONS');
-    const conversations = await findAllConversations();
+    const conversations = await findAllConversations(
+      page,
+      searchInput !== '' ? 50000 : 15,
+      searchInput
+    );
+    console.log(conversations);
     socket.emit('conversations', conversations);
   };
 

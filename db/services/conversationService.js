@@ -61,10 +61,13 @@ class ConversationService {
     return conversation;
   }
 
-  async findAllConversations(filter) {
+  async findAllConversations(page, limit, searchInput) {
     try {
-      const conversations = await ConversationModel.find()
+      const conversations = await ConversationModel.find({
+        title: { $regex: searchInput, $options: 'i' },
+      })
         .sort({ updatedAt: -1 })
+        .limit(page * limit)
         .populate({
           path: 'messages',
         })
