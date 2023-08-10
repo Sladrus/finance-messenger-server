@@ -97,6 +97,7 @@ class ConversationService {
         $gte: startDate,
         $lte: endDate,
       };
+      const count = await ConversationModel.countDocuments(query);
 
       const conversations = await ConversationModel.find(query)
         .sort({ updatedAt: -1 })
@@ -110,7 +111,7 @@ class ConversationService {
           select: '-conversations',
         });
 
-      return conversations;
+      return { conversations, count };
     } catch (error) {
       console.log(error);
     }
