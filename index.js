@@ -28,7 +28,10 @@ const { UserModel } = require('./db/models/userModel');
 const { TokenModel } = require('./db/models/tokenModel');
 const { default: axios } = require('axios');
 const log = console.log;
+// const { EventEmitter } = require('events');
+// const bus = new EventEmitter();
 
+// bus.setMaxListeners(20);
 const app = express();
 app.use(
   cors({

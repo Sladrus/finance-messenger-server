@@ -19,7 +19,7 @@ class StageService {
   async findStageByValue(value) {
     const stage = await StageModel.findOne({ value }).populate({
       path: 'conversations',
-      populate: [{ path: 'messages' }, { path: 'user' }],
+      populate: [{ path: 'messages' }, { path: 'user' }, { path: 'tasks' }],
     });
     return stage;
   }
@@ -60,7 +60,7 @@ class StageService {
       );
       const newStage = await StageModel.findOne({ _id: stage.id }).populate({
         path: 'conversations',
-        populate: [{ path: 'messages' }, { path: 'user' }],
+        populate: [{ path: 'messages' }, { path: 'user' }, { path: 'tasks' }],
       });
       return newStage;
     } catch (e) {
@@ -141,11 +141,11 @@ class StageService {
     const { _id: conversationId, stage: oldStageId } = conversation;
     const newStage = await StageModel.findOne({ value: value }).populate({
       path: 'conversations',
-      populate: [{ path: 'messages' }, { path: 'user' }],
+      populate: [{ path: 'messages' }, { path: 'user' }, { path: 'tasks' }],
     });
     const oldStage = await StageModel.findOne({ _id: oldStageId }).populate({
       path: 'conversations',
-      populate: [{ path: 'messages' }, { path: 'user' }],
+      populate: [{ path: 'messages' }, { path: 'user' }, { path: 'tasks' }],
     });
 
     if (newStage._id.toString() === oldStage._id.toString()) {
@@ -172,11 +172,11 @@ class StageService {
     }
     const newTmp = await StageModel.findOne({ value: value }).populate({
       path: 'conversations',
-      populate: [{ path: 'messages' }, { path: 'user' }],
+      populate: [{ path: 'messages' }, { path: 'user' }, { path: 'tasks' }],
     });
     const oldTmp = await StageModel.findOne({ _id: oldStageId }).populate({
       path: 'conversations',
-      populate: [{ path: 'messages' }, { path: 'user' }],
+      populate: [{ path: 'messages' }, { path: 'user' }, { path: 'tasks' }],
     });
     return { oldTmp, newTmp };
   }

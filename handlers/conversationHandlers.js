@@ -6,11 +6,13 @@ const {
   linkConversation,
   findOneConversation,
   changeuserConversation,
+  createTasks,
 } = require('../db/services/conversationService');
 const { createMessage } = require('../db/services/messageService');
 const { findStages } = require('../db/services/stageService');
 // const { addMessage } = require('./messageHandlers');
 const { bot } = require('../telegram');
+const moment = require('moment');
 
 const getStatuses = async (io, socket) => {
   console.log('STAGES');
@@ -69,6 +71,39 @@ module.exports = (io, socket) => {
     const conversation = await readConversation(chat_id);
 
     io.emit('status:conversation', conversation);
+    const messages = await findMessagesByChat({
+      chat_id: chat_id,
+    });
+    io.in(chat_id).emit('messages', messages);
+  };
+
+  const createTask = async ({ task, chat_id, user }) => {
+    console.log(task, chat_id);
+    const result = await createTasks(task, chat_id);
+    console.log(result);
+    const convertedDate = moment(task.endAt).format('DD.MM.YY, HH:MM');
+
+    await addMessage(
+      {
+        type: 'event',
+        from: {
+          id: 1274681231,
+          first_name: user.username,
+        },
+        text: `Добавлена новая задача: "${task.text}" на ${convertedDate}`,
+        unread: false,
+        date: Date.now() / 1000,
+      },
+      chat_id
+    );
+    // const conversation = await readConversation(chat_id);
+    // io.emit('status:conversation', conversation);
+    // const messages = await findMessagesByChat({
+    //   chat_id: chat_id,d
+    // });
+    // io.in(chat_id).emit('messages', messages);
+    const conversationTmp = await findOneConversation({ chat_id: chat_id });
+    io.emit('status:conversation', conversationTmp);
     const messages = await findMessagesByChat({
       chat_id: chat_id,
     });
@@ -134,6 +169,7 @@ module.exports = (io, socket) => {
   socket.on('conversation:read', readConversations);
   socket.on('conversation:link', linkConversations);
   socket.on('conversation:changeuser', changeuserConversations);
+  socket.on('conversation:taskCreate', createTask);
 
   //   socket.on('message:remove', removeMessage);
   // module.exports.addConversation = addConversation;

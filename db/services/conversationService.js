@@ -1,6 +1,7 @@
 const { ConversationModel } = require('../models/conversationModel');
 const { MessageModel } = require('../models/messageModel');
 const { StageModel } = require('../models/stageModel');
+const { TaskModel } = require('../models/taskModel');
 const { addConversationToStage, findStageByValue } = require('./stageService');
 
 class ConversationService {
@@ -50,14 +51,15 @@ class ConversationService {
       { chat_id: chat_id },
       { $set: { user: conversation?.user ? null : user?._id } }
     );
-    const conversationTmp = await ConversationModel.findOne({
-      chat_id: chat_id,
-    })
-      .populate({
-        path: 'messages',
-      })
-      .populate({ path: 'stage' })
-      .populate({ path: 'user' });
+    // const conversationTmp = await ConversationModel.findOne({
+    //   chat_id: chat_id,
+    // })
+    //   .populate({
+    //     path: 'messages',
+    //   })
+    //   .populate({ path: 'stage' })
+    //   .populate({ path: 'user' })
+    //   .populate('tasks');
     // console.log(conversation);
     return conversation;
   }
@@ -97,6 +99,7 @@ class ConversationService {
         $gte: startDate,
         $lte: endDate,
       };
+
       const count = await ConversationModel.countDocuments(query);
 
       const conversations = await ConversationModel.find(query)
@@ -109,7 +112,8 @@ class ConversationService {
         .populate({
           path: 'stage',
           select: '-conversations',
-        });
+        })
+        .populate({ path: 'tasks' });
 
       return { conversations, count };
     } catch (error) {
@@ -117,11 +121,35 @@ class ConversationService {
     }
   }
 
+  async createTasks(data, chat_id) {
+    // console.log(data);
+    const conversation = await ConversationModel.findOne({
+      chat_id: chat_id,
+    }).populate({ path: 'tasks' });
+
+    const task = await TaskModel.create({
+      text: data.text,
+      conversation: conversation._id,
+      endAt: data.endAt,
+      createdAt: data.createdAt,
+    });
+
+    if (!conversation?.tasks) {
+      conversation.tasks = [];
+    }
+    conversation.tasks.push(task);
+    await conversation.save();
+    console.log(conversation);
+
+    return task;
+  }
+
   async findOneConversation(filter) {
     const conversation = await ConversationModel.findOne(filter)
       .populate('messages')
       .populate({ path: 'stage' })
-      .populate({ path: 'user' });
+      .populate({ path: 'user' })
+      .populate({ path: 'tasks' });
     // conversation.unreadCount = conversation?.messages.reduce(
     //   (count, message) => {
     //     return message.unread ? count + 1 : count;
@@ -151,7 +179,8 @@ class ConversationService {
     })
       .populate('messages')
       .populate({ path: 'stage' })
-      .populate({ path: 'user' });
+      .populate({ path: 'user' })
+      .populate({ path: 'tasks' });
 
     if (conversation) {
       // Get all messages in the conversation
