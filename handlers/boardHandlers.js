@@ -71,7 +71,6 @@ module.exports = (io, socket) => {
   };
 
   socket.on('status:value', getStatusByValue);
-
   socket.on('status:get', getStatuses);
   socket.on('status:add', addStatus);
   socket.on('status:update', updateStatus);

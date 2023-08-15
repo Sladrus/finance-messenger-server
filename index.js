@@ -48,6 +48,8 @@ const io = new Server(httpServer, {
   cors: { origin: '*' },
   path: '/socket',
   compress: true,
+  pingInterval: 10000, // how often to ping/pong.
+  pingTimeout: 30000, // time after which the connection is considered timed-out.
 });
 
 io.use(
