@@ -77,9 +77,7 @@ class ConversationService {
         query['stage'] = stage._id;
       }
 
-      if (filter?.user === '') {
-        query['user'] = { $exists: true };
-      } else if (filter?.user === null) {
+      if (filter?.user === null) {
         query['user'] = null;
       } else if (filter?.user) {
         query['user'] = filter.user;
