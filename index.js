@@ -340,8 +340,9 @@ bot.on('new_chat_members', async (msg) => {
         ? `\n1. Хотите совершить перевод: ${order['how_to_send']} \n2. Валюта получения: ${order['symbol']}\n3. Сумма к получению: ${order['summ']}`
         : ''
     }`;
-    conversation.members.push(msg.new_chat_member);
-    await conversation.save();
+    const newConversation = await findOneConversation({ chat_id: chatId });
+    newConversation.members.push(msg.new_chat_member);
+    await newConversation.save();
     await registerMessageHandlers.addMessage(msg, chatId);
     // await registerConversationHandlers.getConversations();
     // return await registerBoardHandlers.getStatuses();
