@@ -89,9 +89,9 @@ class ConversationService {
       }
 
       const startDate = new Date(dateRange[0].startDate);
-      startDate.setHours(0, 0, 0, 0);
+      // startDate.setHours(0, 0, 0, 0);
       const endDate = new Date(dateRange[0].endDate);
-      endDate.setHours(0, 0, 0, 0);
+      // endDate.setHours(23, 59, 59, 0);
 
       query['workAt'] = {
         $gte: startDate,
