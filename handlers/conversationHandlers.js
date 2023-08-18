@@ -13,7 +13,7 @@ const { createMessage } = require('../db/services/messageService');
 const { findStages } = require('../db/services/stageService');
 // const { addMessage } = require('./messageHandlers');
 const { bot } = require('../telegram');
-const moment = require('moment');
+const moment = require('moment-timezone');
 
 const getStatuses = async (io, socket) => {
   console.log('STAGES');
@@ -89,7 +89,10 @@ module.exports = (io, socket) => {
     console.log(task, chat_id);
     const result = await createTasks(task, chat_id);
     console.log(result);
-    const convertedDate = moment(task.endAt).format('DD.MM.YY, HH:MM');
+    const date = moment(task.endAt).tz('Europe/Moscow');
+    const convertedDate = date.format('DD.MM.YY HH:mm');
+
+    // const convertedDate = moment(task.endAt).format('DD.MM.YY, hh:mm');
 
     await addMessage(
       {
