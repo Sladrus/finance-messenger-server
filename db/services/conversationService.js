@@ -119,6 +119,11 @@ class ConversationService {
     }
   }
 
+  async findAllTasks() {
+    const tasks = await TaskModel.find().populate({ path: 'conversation' });
+    return tasks;
+  }
+
   async createTasks(data, chat_id) {
     // console.log(data);
     const conversation = await ConversationModel.findOne({

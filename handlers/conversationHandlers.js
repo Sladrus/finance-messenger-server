@@ -7,6 +7,7 @@ const {
   findOneConversation,
   changeuserConversation,
   createTasks,
+  findAllTasks,
 } = require('../db/services/conversationService');
 const { createMessage } = require('../db/services/messageService');
 const { findStages } = require('../db/services/stageService');
@@ -53,6 +54,13 @@ module.exports = (io, socket) => {
     socket.emit('conversations', conversations);
   };
 
+  const getTasks = async () => {
+    console.log('TASKS');
+    const tasks = await findAllTasks();
+    console.log(tasks);
+    socket.emit('tasks', tasks);
+  };
+
   const refreshLink = async ({ chat_id }) => {
     try {
       const link = await bot.exportChatInviteLink(chat_id);
@@ -96,18 +104,13 @@ module.exports = (io, socket) => {
       },
       chat_id
     );
-    // const conversation = await readConversation(chat_id);
-    // io.emit('status:conversation', conversation);
-    // const messages = await findMessagesByChat({
-    //   chat_id: chat_id,d
-    // });
-    // io.in(chat_id).emit('messages', messages);
     const conversationTmp = await findOneConversation({ chat_id: chat_id });
     io.emit('status:conversation', conversationTmp);
     const messages = await findMessagesByChat({
       chat_id: chat_id,
     });
     io.in(chat_id).emit('messages', messages);
+    await getTasks();
   };
 
   const changeuserConversations = async ({ chat_id, user }) => {
@@ -164,6 +167,8 @@ module.exports = (io, socket) => {
   };
 
   // регистрируем обработчики
+  socket.on('task:get', getTasks);
+
   socket.on('conversation:get', getConversations);
   socket.on('conversation:refresh', refreshLink);
   socket.on('conversation:read', readConversations);
