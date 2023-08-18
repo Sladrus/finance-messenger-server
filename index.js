@@ -286,7 +286,7 @@ bot.on('left_chat_member', async (msg) => {
 bot.on('new_chat_members', async (msg) => {
   const chatId = msg.chat.id;
   const me = await bot.getMe();
-  if (msg.new_chat_member == 6174655831) return;
+  if (msg.new_chat_member.id == 6174655831) return;
   if (me.id != msg.new_chat_member.id) {
     let conversation = await findOneConversation({ chat_id: chatId });
     if (!conversation) {
