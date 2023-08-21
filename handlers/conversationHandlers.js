@@ -54,21 +54,26 @@ module.exports = (io, socket) => {
       filter,
       dateRange
     );
-    console.log(conversations);
     socket.emit('conversations', conversations);
+  };
+
+  const getConversation = async ({ chat_id }) => {
+    console.log('CONVERSATION', chat_id);
+    if (chat_id === 0) return;
+    const conversation = await findOneConversation({ chat_id });
+    console.log(conversation);
+    socket.emit('conversation', { conversation });
   };
 
   const getTasks = async () => {
     console.log('TASKS');
     const tasks = await findAllTasks();
-    console.log(tasks);
     socket.emit('tasks', tasks);
   };
 
   const getTags = async () => {
     console.log('TAGS');
     const tags = await findAllTags();
-    console.log(tags);
     socket.emit('tags', tags);
   };
 
@@ -266,6 +271,8 @@ module.exports = (io, socket) => {
   socket.on('tags:remove', removeTags);
 
   socket.on('conversation:get', getConversations);
+  socket.on('conversation:getOne', getConversation);
+
   socket.on('conversation:refresh', refreshLink);
   socket.on('conversation:read', readConversations);
   socket.on('conversation:link', linkConversations);
