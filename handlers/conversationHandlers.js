@@ -59,10 +59,10 @@ module.exports = (io, socket) => {
 
   const getConversation = async ({ chat_id }) => {
     console.log('CONVERSATION', chat_id);
-    if (chat_id === 0) return;
-    const conversation = await findOneConversation({ chat_id });
+    // if (chat_id === 0) return;
+    const conversationTmp = await findOneConversation({ chat_id });
     // console.log(conversation);
-    socket.emit('conversation', { conversation });
+    socket.emit('conversation', { conversationTmp });
   };
 
   const getTasks = async () => {
@@ -93,14 +93,14 @@ module.exports = (io, socket) => {
   };
 
   const readConversations = async ({ chat_id }) => {
-    const conversation = await readConversation(chat_id);
+    const conversationTmp = await readConversation(chat_id);
 
-    io.emit('status:conversation', conversation);
+    io.emit('status:conversation', conversationTmp);
     const messages = await findMessagesByChat({
       chat_id: chat_id,
     });
     io.in(chat_id).emit('messages', messages);
-    socket.emit('conversation', { conversation });
+    socket.emit('conversation', { conversationTmp });
   };
 
   const createTask = async ({ task, chat_id, user }) => {
