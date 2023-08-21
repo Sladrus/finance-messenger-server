@@ -61,7 +61,7 @@ module.exports = (io, socket) => {
     console.log('CONVERSATION', chat_id);
     if (chat_id === 0) return;
     const conversation = await findOneConversation({ chat_id });
-    console.log(conversation);
+    // console.log(conversation);
     socket.emit('conversation', { conversation });
   };
 
@@ -86,6 +86,7 @@ module.exports = (io, socket) => {
       });
       const conversationTmp = await findOneConversation({ chat_id: chat_id });
       io.emit('status:conversation', conversationTmp);
+      socket.emit('conversation', { conversationTmp });
     } catch (e) {
       console.log(e);
     }
@@ -99,6 +100,7 @@ module.exports = (io, socket) => {
       chat_id: chat_id,
     });
     io.in(chat_id).emit('messages', messages);
+    socket.emit('conversation', { conversation });
   };
 
   const createTask = async ({ task, chat_id, user }) => {
@@ -130,6 +132,7 @@ module.exports = (io, socket) => {
     });
     io.in(chat_id).emit('messages', messages);
     await getTasks();
+    socket.emit('conversation', { conversationTmp });
   };
 
   const createTags = async ({ value, chat_id, user }) => {
@@ -151,6 +154,8 @@ module.exports = (io, socket) => {
     );
     const conversationTmp = await findOneConversation({ chat_id: chat_id });
     io.emit('status:conversation', conversationTmp);
+    socket.emit('conversation', { conversationTmp });
+
     const messages = await findMessagesByChat({
       chat_id: chat_id,
     });
@@ -176,6 +181,8 @@ module.exports = (io, socket) => {
     );
     const conversationTmp = await findOneConversation({ chat_id: chat_id });
     io.emit('status:conversation', conversationTmp);
+    socket.emit('conversation', { conversationTmp });
+
     const messages = await findMessagesByChat({
       chat_id: chat_id,
     });
@@ -202,6 +209,8 @@ module.exports = (io, socket) => {
     );
     const conversationTmp = await findOneConversation({ chat_id: chat_id });
     io.emit('status:conversation', conversationTmp);
+    socket.emit('conversation', { conversationTmp });
+
     const messages = await findMessagesByChat({
       chat_id: chat_id,
     });
@@ -231,6 +240,8 @@ module.exports = (io, socket) => {
     const conversationTmp = await findOneConversation({ chat_id: chat_id });
 
     io.emit('status:conversation', conversationTmp);
+    socket.emit('conversation', { conversationTmp });
+
     const messages = await findMessagesByChat({
       chat_id: chat_id,
     });
@@ -256,6 +267,8 @@ module.exports = (io, socket) => {
     const conversationTmp = await findOneConversation({ chat_id: chat_id });
 
     io.emit('status:conversation', conversationTmp);
+    socket.emit('conversation', { conversationTmp });
+
     const messages = await findMessagesByChat({
       chat_id: chat_id,
     });

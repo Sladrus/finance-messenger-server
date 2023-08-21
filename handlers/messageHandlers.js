@@ -117,6 +117,7 @@ module.exports = (io, socket) => {
       io.emit('statuses:load', { oldTmp, newTmp });
       const conversationTmp = await findOneConversation({ chat_id: chat_id });
       io.emit('status:conversation', conversationTmp);
+      socket.emit('conversation', { conversationTmp });
 
       await getMessages();
       // io.emit('conversations', conversations);
@@ -162,11 +163,13 @@ module.exports = (io, socket) => {
       chat_id: !message.isBot ? chatId : message.selectedConversation,
     });
     if (!message.isBot) {
-      console.log()
+      console.log();
       conversationTmp.unreadCount += 1;
       await conversationTmp.save();
     }
     io.emit('status:conversation', conversationTmp);
+    socket.emit('conversation', { conversationTmp });
+
     await getMessages();
   };
 
