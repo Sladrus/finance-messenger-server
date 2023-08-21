@@ -8,6 +8,10 @@ const {
   changeuserConversation,
   createTasks,
   findAllTasks,
+  findAllTags,
+  createTag,
+  addTag,
+  removeTag,
 } = require('../db/services/conversationService');
 const { createMessage } = require('../db/services/messageService');
 const { findStages } = require('../db/services/stageService');
@@ -59,6 +63,13 @@ module.exports = (io, socket) => {
     const tasks = await findAllTasks();
     console.log(tasks);
     socket.emit('tasks', tasks);
+  };
+
+  const getTags = async () => {
+    console.log('TAGS');
+    const tags = await findAllTags();
+    console.log(tags);
+    socket.emit('tags', tags);
   };
 
   const refreshLink = async ({ chat_id }) => {
@@ -116,6 +127,83 @@ module.exports = (io, socket) => {
     await getTasks();
   };
 
+  const createTags = async ({ value, chat_id, user }) => {
+    const result = await createTag(value, chat_id);
+    await addTag(value, chat_id);
+    console.log(result);
+    await addMessage(
+      {
+        type: 'event',
+        from: {
+          id: 1274681231,
+          first_name: user.username,
+        },
+        text: `Создан и добавлен тэг: "${result.value}"`,
+        unread: false,
+        date: Date.now() / 1000,
+      },
+      chat_id
+    );
+    const conversationTmp = await findOneConversation({ chat_id: chat_id });
+    io.emit('status:conversation', conversationTmp);
+    const messages = await findMessagesByChat({
+      chat_id: chat_id,
+    });
+    io.in(chat_id).emit('messages', messages);
+    await getTags();
+  };
+
+  const addTags = async ({ value, chat_id, user }) => {
+    const result = await addTag(value.label, chat_id);
+    console.log(result);
+    await addMessage(
+      {
+        type: 'event',
+        from: {
+          id: 1274681231,
+          first_name: user.username,
+        },
+        text: `Добавлен тэг: "${result.value}"`,
+        unread: false,
+        date: Date.now() / 1000,
+      },
+      chat_id
+    );
+    const conversationTmp = await findOneConversation({ chat_id: chat_id });
+    io.emit('status:conversation', conversationTmp);
+    const messages = await findMessagesByChat({
+      chat_id: chat_id,
+    });
+    io.in(chat_id).emit('messages', messages);
+    await getTags();
+  };
+
+  const removeTags = async ({ value, chat_id, user }) => {
+    console.log(value);
+    const result = await removeTag(value.label, chat_id);
+    console.log(result);
+    await addMessage(
+      {
+        type: 'event',
+        from: {
+          id: 1274681231,
+          first_name: user.username,
+        },
+        text: `Удален тэг: "${result.value}"`,
+        unread: false,
+        date: Date.now() / 1000,
+      },
+      chat_id
+    );
+    const conversationTmp = await findOneConversation({ chat_id: chat_id });
+    io.emit('status:conversation', conversationTmp);
+    const messages = await findMessagesByChat({
+      chat_id: chat_id,
+    });
+    io.in(chat_id).emit('messages', messages);
+    await getTags();
+  };
+
   const changeuserConversations = async ({ chat_id, user }) => {
     console.log(chat_id, user);
     const conversation = await changeuserConversation(chat_id, user);
@@ -171,6 +259,11 @@ module.exports = (io, socket) => {
 
   // регистрируем обработчики
   socket.on('task:get', getTasks);
+
+  socket.on('tags:get', getTags);
+  socket.on('tags:create', createTags);
+  socket.on('tags:add', addTags);
+  socket.on('tags:remove', removeTags);
 
   socket.on('conversation:get', getConversations);
   socket.on('conversation:refresh', refreshLink);
