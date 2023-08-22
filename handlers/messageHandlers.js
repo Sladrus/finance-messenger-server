@@ -117,8 +117,6 @@ module.exports = (io, socket) => {
       io.emit('statuses:load', { oldTmp, newTmp });
       const conversationTmp = await findOneConversation({ chat_id: chat_id });
       io.emit('status:conversation', conversationTmp);
-      socket.emit('conversation', { conversationTmp });
-
       await getMessages();
       // io.emit('conversations', conversations);
       // await getStatuses();
@@ -168,8 +166,6 @@ module.exports = (io, socket) => {
       await conversationTmp.save();
     }
     io.emit('status:conversation', conversationTmp);
-    socket.emit('conversation', { conversationTmp });
-
     await getMessages();
   };
 
