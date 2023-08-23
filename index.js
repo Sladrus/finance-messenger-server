@@ -314,6 +314,23 @@ bot.on('new_chat_members', async (msg) => {
           'raw',
           -1
         );
+        await bot.sendMessage(
+          -1001955007812,
+          `Пользователь ${
+            msg.new_chat_member?.last_name
+              ? msg.new_chat_member.first_name +
+                ' ' +
+                msg.new_chat_member?.last_name
+              : msg.new_chat_member.first_name
+          } зашел в чат\n\n<b>${msg.chat.title}</b>\n\nChat ID: ${
+            msg.chat.id
+          }\nUsername: ${
+            msg.new_chat_member?.username
+              ? '@' + msg.new_chat_member?.username
+              : 'Отсутствует'
+          }`,
+          { parse_mode: 'HTML' }
+        );
         io.emit('statuses:load', { oldTmp, newTmp });
       }
     }
