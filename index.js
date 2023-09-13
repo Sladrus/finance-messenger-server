@@ -60,6 +60,7 @@ io.use(
       succeedWithoutToken: true,
     },
     async function (payload, done) {
+      log('TRY');
       // log(payload);
       if (payload && payload?._doc?.email) {
         const user = await UserModel.findOne({ email: payload._doc.email });
@@ -74,6 +75,11 @@ io.use(
     }
   )
 );
+
+// io.on('error', (err) => {
+//   console.error('Произошло исключение сокета:', err);
+//   // Обработка исключения сокета
+// });
 
 mongoose
   .connect(process.env.DB_URL, {
